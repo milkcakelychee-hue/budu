@@ -42,11 +42,9 @@ function draw() {
   const tiles = acts.map(a => `<div class="deduct-tile">
     <div class="corner-glow soft"></div>
     <div class="dt-top">${iconTile(a.icon, 44)}<span class="dt-pts">−${a.points}</span></div>
+    <div class="dt-name">${esc(a.name)}</div>
     <div class="dt-bottom">
-      <div class="dt-text">
-        <div class="dt-name">${esc(a.name)}</div>
-        <div class="dt-count">${esc(t('deductWeekCount', { n: weekList.filter(e => e.activity_id === a.id).length }))}</div>
-      </div>
+      <div class="dt-count">${esc(t('deductWeekCount', { n: weekList.filter(e => e.activity_id === a.id).length }))}</div>
       ${admin ? `<button type="button" class="minus-btn" data-deduct="${a.id}" aria-label="${esc(S.deductTitle)} ${esc(a.name)}" ${store.canWrite() ? '' : 'disabled'}>${svgIcon(UI_ICONS.minus, { size: 18, stroke: 'var(--plus-fg)', width: 2 })}</button>` : ''}
     </div>
   </div>`).join('');
