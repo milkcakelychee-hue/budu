@@ -95,5 +95,13 @@ route();
 store.start();
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
+  // updateViaCache: 'none' = ตรวจ sw.js ใหม่ทุกครั้งที่เปิดแอป
+  navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+    .then(reg => reg.update()).catch(() => {});
+  // มีเวอร์ชันใหม่เข้ามาคุมหน้า → โหลดหน้าใหม่ครั้งเดียวให้เห็นของใหม่ทันที
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (hadController && !reloaded) { reloaded = true; location.reload(); }
+  });
 }

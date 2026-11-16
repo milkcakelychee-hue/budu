@@ -1,6 +1,6 @@
 // BuDu service worker · แคชเฉพาะไฟล์แอป ห้ามแคชคำขอไป Supabase
 // เปลี่ยนเลขเวอร์ชันทุกครั้งที่อัปเดตไฟล์
-const CACHE = 'budu-v16';
+const CACHE = 'budu-v17';
 const FILES = [
   './',
   'index.html',
@@ -50,7 +50,10 @@ const FILES = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  // cache: 'reload' = ดึงจากเซิร์ฟเวอร์จริง ไม่ใช้แคชของเบราว์เซอร์ (GitHub Pages เก็บไฟล์ไว้ 10 นาที)
+  e.waitUntil(caches.open(CACHE)
+    .then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' }))))
+    .then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {
