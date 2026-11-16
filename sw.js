@@ -1,6 +1,6 @@
 // BuDu service worker · แคชเฉพาะไฟล์แอป ห้ามแคชคำขอไป Supabase
 // เปลี่ยนเลขเวอร์ชันทุกครั้งที่อัปเดตไฟล์
-const CACHE = 'budu-v27';
+const CACHE = 'budu-v28';
 const FILES = [
   './',
   'index.html',
@@ -68,6 +68,13 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   // เฉพาะไฟล์ของแอปเอง (origin เดียวกัน, GET) · Supabase เป็นอีก origin จึงผ่านไปเครือข่ายเสมอ
   if (e.request.method !== 'GET' || url.origin !== self.location.origin) return;
+  // หน้า HTML: ดึงจากเซิร์ฟเวอร์ก่อน (ได้ meta ใหม่เสมอ เช่นสีแถบเวลา/แบตตอนเพิ่มไปหน้าโฮม) · ออฟไลน์ใช้แคช
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request, { cache: 'no-store' }).catch(() => caches.match('./', { ignoreSearch: true }))
+    );
+    return;
+  }
   e.respondWith(
     caches.match(e.request, { ignoreSearch: true }).then(hit => hit || fetch(e.request))
   );

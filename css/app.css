@@ -317,6 +317,23 @@ body.sheet-open { overflow: hidden; }
 .routine-list { display: flex; flex-direction: column; gap: 14px; padding: 0 20px; }
 .routine-card { position: relative; overflow: hidden; background: var(--card); border-radius: var(--r-card); box-shadow: var(--card-shadow); }
 .routine-card.used { opacity: .5; }
+/* กิจวัตรแบบแถวกะทัดรัด (หน้าวันนี้) */
+.routine-rows { margin: 0 20px; background: var(--card); border-radius: var(--r-card); box-shadow: var(--card-shadow); padding: 4px 14px; }
+.routine-rows .list-sep { margin-left: 54px; }
+.routine-row.used .rr-main, .routine-row.used .rr-more { opacity: .5; }
+.rr-main { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 0; cursor: default; }
+.rr-main[data-toggle] { cursor: pointer; }
+.rr-text { flex: 1; min-width: 0; }
+.rr-name { font-size: 16px; font-weight: 700; line-height: 1.4; }
+.rr-sub { font-size: 12.5px; color: var(--text-2); }
+.rr-pts { font-size: 14px; font-weight: 700; color: var(--pink); white-space: nowrap; }
+.rr-plus { border: 0; padding: 0; cursor: pointer; width: 44px; height: 44px; }
+.rr-plus:disabled { opacity: .4; cursor: default; }
+.rr-state { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: var(--text-3); white-space: nowrap; }
+.rr-state.done { color: var(--pink-deep); }
+.rr-more { padding: 0 0 14px 52px; }
+.rr-more .rc-dots { margin-top: 0; }
+.rr-more .dot { width: 24px; height: 24px; }
 .corner-glow { position: absolute; inset: 0; background: var(--corner-glow); pointer-events: none; }
 .corner-glow.soft { background: radial-gradient(120% 90% at 100% 0%, rgba(242,170,195,.45) 0%, rgba(255,255,255,0) 55%); }
 .rc-icon { position: absolute; right: 22px; top: 22px; width: 44px; height: 44px; border-radius: 14px; background: rgba(255,255,255,.8); display: flex; align-items: center; justify-content: center; color: #111; }

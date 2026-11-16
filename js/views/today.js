@@ -49,54 +49,56 @@ function balanceCard() {
   </div>`;
 }
 
-// ---------- การ์ดกิจวัตร ----------
-function routineCard(a, today) {
+// ---------- กิจวัตร: แถวกะทัดรัด แตะแถวเพื่อกางดูวงติ๊ก 7 ดวงและโบนัส ----------
+const expanded = new Set(); // id กิจกรรมที่กางอยู่ (จำไว้ระหว่างวาดใหม่)
+
+function routineRow(a, today) {
   const entries = store.state.data.entries;
   const once = a.once_per_day !== false;
   const todayEntries = entries.filter(e => e.activity_id === a.id && e.kind === 'earn' && e.entry_date === today && (e.status === 'pending' || e.status === 'confirmed'));
-  // วันละครั้ง: รายการวันนี้ (ยืนยันแล้วก่อน) ล็อกการ์ด · หลายครั้งต่อวัน: กดได้ตลอด ไม่ล็อก
+  // วันละครั้ง: รายการวันนี้ (ยืนยันแล้วก่อน) ล็อกแถว · หลายครั้งต่อวัน: กดได้ตลอด ไม่ล็อก
   const todayEntry = once ? (todayEntries.find(e => e.status === 'confirmed') ?? todayEntries[0]) : null;
   const doneToday = todayEntries.some(e => e.status === 'confirmed');
   const streak = currentStreak(confirmedDates(entries, a.id), today);
   // รอบที่ครบ 7 แล้วเมื่อวาน → วันนี้เริ่มรอบใหม่
   const filled = !doneToday && streak > 0 && streak % RULES.STREAK_LENGTH === 0 ? 0 : dotsFilled(streak);
+  const streakOn = a.streak_enabled;
+  const open = expanded.has(a.id);
+
+  let right;
+  if (todayEntry?.status === 'confirmed') {
+    right = `<span class="rr-state done">${esc(S.doneToday)}${svgIcon(UI_ICONS.check, { size: 16, stroke: 'var(--pink-deep)', width: 2.2 })}</span>`;
+  } else if (todayEntry) {
+    right = `<span class="rr-state">${esc(S.pending)}</span>`;
+  } else {
+    const label = store.isAdmin() ? t('giveToday', { n: a.points }) : t('sendForConfirm', { n: a.points });
+    right = `<span class="rr-pts">${esc(t('perTimeValue', { n: a.points }))}</span>
+      <button type="button" class="plus-circle rr-plus" data-earn="${a.id}" aria-label="${esc(label)}" ${store.canWrite() ? '' : 'disabled'}>${svgIcon(UI_ICONS.plus, { size: 18, stroke: 'var(--plus-fg)', width: 2 })}</button>`;
+  }
+
   const dots = Array.from({ length: RULES.STREAK_LENGTH }, (_, i) => {
     if (i < filled) return `<span class="dot on">${svgIcon(UI_ICONS.check, { size: 14, stroke: 'var(--dot-check)', width: 2.4 })}</span>`;
     if (i === filled && !todayEntries.length) return '<span class="dot today"></span>';
     return '<span class="dot"></span>';
   }).join('');
 
-  let foot;
-  if (todayEntry?.status === 'confirmed') {
-    foot = `<div class="rc-foot done"><span>${esc(S.doneToday)}</span>${svgIcon(UI_ICONS.check, { size: 18, stroke: 'var(--pink-deep)', width: 2.2 })}</div>`;
-  } else if (todayEntry) {
-    foot = `<div class="rc-foot wait"><span>${esc(S.pending)}</span></div>`;
-  } else {
-    const label = store.isAdmin() ? t('giveToday', { n: a.points }) : t('sendForConfirm', { n: a.points });
-    foot = `<div class="rc-foot"><button type="button" class="rc-btn" data-earn="${a.id}" ${store.canWrite() ? '' : 'disabled'}>
-      <span>${esc(label)}</span><span class="plus-circle">${svgIcon(UI_ICONS.plus, { size: 18, stroke: 'var(--plus-fg)', width: 2 })}</span></button></div>`;
-  }
-
-  const streakOn = a.streak_enabled;
-  // วันละครั้งที่กดแล้ว (ทำแล้ว/รอยืนยัน): การ์ดจางลง กดไม่ได้จนวันใหม่หรือยกเลิกในประวัติ
-  return `<article class="routine-card${todayEntry ? ' used' : ''}">
-    <div class="corner-glow"></div>
-    <div class="rc-icon">${svgIcon(ACTIVITY_ICONS[a.icon] || ACTIVITY_ICONS.star, { size: 22 })}</div>
-    <div class="rc-body">
-      <div class="rc-name">${esc(a.name)}</div>
-      ${streakOn ? `<div class="rc-sub">${esc(t('streakDays', { n: streak }))}</div>` : ''}
-      <div class="rc-boxes">
-        <div class="rc-box"><div class="rc-k">${esc(S.perTime)}</div><div class="rc-v pink">${esc(t('perTimeValue', { n: a.points }))}</div></div>
-        ${streakOn ? `<div class="rc-box"><div class="rc-k">${esc(S.bonusLabel)}</div><div class="rc-v">${esc(t('bonusValue', { b: a.streak_bonus }))}</div></div>` : ''}
+  return `<div class="routine-row${todayEntry ? ' used' : ''}${open ? ' open' : ''}">
+    <div class="rr-main" ${streakOn ? `data-toggle="${a.id}" role="button" tabindex="0" aria-expanded="${open}"` : ''}>
+      ${iconTile(a.icon, 40)}
+      <div class="rr-text">
+        <div class="rr-name">${esc(a.name)}</div>
+        ${streakOn ? `<div class="rr-sub">${esc(t('streakDays', { n: streak }))} · ${esc(t('dotsCount', { n: filled }))}</div>` : ''}
       </div>
-      ${streakOn ? `<div class="rc-dots"><div class="dots">${dots}</div><div class="rc-count">${esc(t('dotsCount', { n: filled }))}</div></div>
+      ${right}
+    </div>
+    ${streakOn && open ? `<div class="rr-more">
+      <div class="rc-dots"><div class="dots">${dots}</div><div class="rc-count">${esc(t('dotsCount', { n: filled }))}</div></div>
       ${filled === RULES.STREAK_LENGTH
         // วันที่ครบรอบ: ขึ้น "ครบรอบ +{b}" สีชมพู แทน "อีก 7 วันรับโบนัส" (ผู้ใช้กำหนด 16 พ.ย. 2569)
         ? `<div class="rc-hint done">${esc(t('statsBadgeDone', { b: a.streak_bonus }))}</div>`
-        : `<div class="rc-hint">${esc(t('daysToBonus', { n: daysToBonus(filled === 0 ? 0 : streak), b: a.streak_bonus }))}</div>`}` : ''}
-    </div>
-    ${foot}
-  </article>`;
+        : `<div class="rc-hint">${esc(t('daysToBonus', { n: daysToBonus(filled === 0 ? 0 : streak), b: a.streak_bonus }))}</div>`}
+    </div>` : ''}
+  </div>`;
 }
 
 // ---------- รอยืนยัน ----------
@@ -145,7 +147,7 @@ function draw() {
     .sort((a, b) => a.sort_order - b.sort_order);
 
   const routines = acts.length
-    ? `<div class="routine-list">${acts.map(a => routineCard(a, today)).join('')}</div>`
+    ? `<div class="routine-rows">${acts.map(a => routineRow(a, today)).join('<div class="list-sep"></div>')}</div>`
     : `<div class="today-empty"><div class="corner-glow"></div>
         <span class="empty-ico tile">${svgIcon(admin ? UI_ICONS.plus : UI_ICONS.list, { size: 26 })}</span>
         <div class="empty-text">${esc(admin ? S.todayEmptyAdmin : S.todayEmptyPartner)}</div>
@@ -164,6 +166,11 @@ function draw() {
     ${routines}
   </section>`;
 
+  root.querySelectorAll('[data-toggle]').forEach(r => {
+    const flip = () => { const id = r.dataset.toggle; expanded.has(id) ? expanded.delete(id) : expanded.add(id); draw(); };
+    r.onclick = e => { if (!e.target.closest('[data-earn]')) flip(); };
+    r.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); } };
+  });
   root.querySelectorAll('[data-earn]').forEach(b => b.onclick = () => {
     const a = acts.find(x => x.id === b.dataset.earn);
     act(b, async () => { await api.logEarn(a.id); await store.refresh('entries'); },
