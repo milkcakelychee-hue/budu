@@ -1,4 +1,5 @@
 // ข้อความบนหน้าจอทั้งหมด · ตาม APP_SPEC.md หัวข้อ 6 ทุกตัวอักษร (ร่างคำ แก้ได้ที่ไฟล์นี้ที่เดียว)
+// ผู้ใช้กำหนด 16 พ.ย. 2569: คำว่า "ผู้ดูแล" บนหน้าจอเปลี่ยนเป็น "ปรายฟ้า" ทุกจุด
 // ค่าใน {} เติมด้วยฟังก์ชัน t()
 
 export const S = {
@@ -69,7 +70,7 @@ export const S = {
   reject: 'ไม่ผ่าน',
   todayEmptyAdmin: 'ยังไม่มีกิจกรรม เพิ่มกิจกรรมแรกเพื่อเริ่มให้แต้ม',
   todayEmptyAdminButton: 'เพิ่มกิจกรรม',
-  todayEmptyPartner: 'ยังไม่มีกิจกรรม รอให้ผู้ดูแลเพิ่มก่อนนะ',
+  todayEmptyPartner: 'ยังไม่มีกิจกรรม รอให้ปรายฟ้าเพิ่มก่อนนะ',
 
   // toast
   toastGiven: 'ให้ +{n} แต้มแล้ว',
@@ -110,13 +111,13 @@ export const S = {
   // คูปอง
   couponHeader: 'BuDu · คูปอง',
   couponActive: 'ยังไม่ใช้',
-  couponRequested: 'รอผู้ดูแลยืนยัน',
+  couponRequested: 'รอปรายฟ้ายืนยัน',
   couponUsed: 'ใช้แล้ว',
   redeemedAt: 'แลกเมื่อ',
   usedAt: 'ใช้เมื่อ',
-  couponShowHint: 'โชว์หน้านี้ให้ผู้ดูแลเพื่อรับรางวัล',
+  couponShowHint: 'โชว์หน้านี้ให้ปรายฟ้าเพื่อรับรางวัล',
   couponUse: 'ใช้คูปองนี้',
-  couponSent: 'ส่งให้ผู้ดูแลยืนยันแล้ว',
+  couponSent: 'ส่งให้ปรายฟ้ายืนยันแล้ว',
   couponMarkUsed: 'ใช้แล้ว',
   couponMarkUsedConfirm: 'ทำเครื่องหมายว่าให้รางวัลแล้ว? ย้อนกลับไม่ได้',
 
