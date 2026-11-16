@@ -42,8 +42,9 @@
   --scrim: rgba(17,17,17,.28);
   --sheet-bg: #FFFFFF;
 
-  --font-serif: ui-serif, 'New York', Georgia, Thonburi, serif;
-  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', Thonburi, system-ui, sans-serif;
+  /* หัวข้อ/ตัวเลขใหญ่ = Prompt · เนื้อความ = IBM Plex Sans Thai Looped (ผู้ใช้เปลี่ยน 16 พ.ย. 2569 แทนฟอนต์ระบบ) */
+  --font-head: 'Prompt', Thonburi, sans-serif;
+  --font-body: 'IBM Plex Sans Thai Looped', Thonburi, -apple-system, system-ui, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, Thonburi, monospace;
   --font-logo: 'Gaegu', cursive;
 

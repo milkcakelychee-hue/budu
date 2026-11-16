@@ -1,13 +1,26 @@
 // BuDu service worker · แคชเฉพาะไฟล์แอป ห้ามแคชคำขอไป Supabase
 // เปลี่ยนเลขเวอร์ชันทุกครั้งที่อัปเดตไฟล์
-const CACHE = 'budu-v5';
+const CACHE = 'budu-v6';
 const FILES = [
   './',
   'index.html',
   'manifest.webmanifest',
+  'css/fonts.css',
   'css/tokens.css',
   'css/app.css',
   'fonts/gaegu-700-subset.woff2',
+  'fonts/plex-thai-looped-400-latin.woff2',
+  'fonts/plex-thai-looped-400-thai.woff2',
+  'fonts/plex-thai-looped-500-latin.woff2',
+  'fonts/plex-thai-looped-500-thai.woff2',
+  'fonts/plex-thai-looped-600-latin.woff2',
+  'fonts/plex-thai-looped-600-thai.woff2',
+  'fonts/plex-thai-looped-700-latin.woff2',
+  'fonts/plex-thai-looped-700-thai.woff2',
+  'fonts/prompt-400-latin.woff2',
+  'fonts/prompt-400-thai.woff2',
+  'fonts/prompt-500-latin.woff2',
+  'fonts/prompt-500-thai.woff2',
   'icons/icon-180.png',
   'icons/icon-192.png',
   'icons/icon-512.png',
