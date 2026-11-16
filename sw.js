@@ -1,0 +1,51 @@
+// BuDu service worker · แคชเฉพาะไฟล์แอป ห้ามแคชคำขอไป Supabase
+// เปลี่ยนเลขเวอร์ชันทุกครั้งที่อัปเดตไฟล์
+const CACHE = 'budu-v1';
+const FILES = [
+  './',
+  'index.html',
+  'manifest.webmanifest',
+  'css/tokens.css',
+  'css/app.css',
+  'fonts/gaegu-700-subset.woff2',
+  'icons/icon-180.png',
+  'icons/icon-192.png',
+  'icons/icon-512.png',
+  'js/app.js',
+  'js/config.js',
+  'js/strings.js',
+  'js/icons.js',
+  'js/ui.js',
+  'js/local.js',
+  'js/views/onboarding.js',
+  'js/views/today.js',
+  'js/views/deduct.js',
+  'js/views/rewards.js',
+  'js/views/coupon.js',
+  'js/views/stats.js',
+  'js/views/history.js',
+  'js/views/settings.js',
+  'js/views/manage-activities.js',
+  'js/views/manage-rewards.js',
+];
+
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k.startsWith('budu-') && k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', e => {
+  const url = new URL(e.request.url);
+  // เฉพาะไฟล์ของแอปเอง (origin เดียวกัน, GET) · Supabase เป็นอีก origin จึงผ่านไปเครือข่ายเสมอ
+  if (e.request.method !== 'GET' || url.origin !== self.location.origin) return;
+  e.respondWith(
+    caches.match(e.request, { ignoreSearch: true }).then(hit => hit || fetch(e.request))
+  );
+});
