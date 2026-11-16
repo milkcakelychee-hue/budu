@@ -40,6 +40,7 @@
   --nav-ring: #FFFFFF;
 
   --scrim: rgba(17,17,17,.28);
+  --sheet-bg: #FFFFFF;
 
   --font-serif: ui-serif, 'New York', Georgia, Thonburi, serif;
   --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', Thonburi, system-ui, sans-serif;
@@ -87,6 +88,7 @@
     --nav-active-label: #F5EEF3;
     --nav-ring: #1C1620;
     --scrim: rgba(0,0,0,.5);
+    --sheet-bg: #1C1620;
     color-scheme: dark;
   }
 }

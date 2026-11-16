@@ -161,6 +161,7 @@ export const S = {
   activityEdit: 'แก้กิจกรรม',
   activityName: 'ชื่อกิจกรรม',
   activityNamePh: 'เช่น นอนก่อน 23.30',
+  kindLabel: 'ชนิด',
   kindEarnOpt: 'ให้แต้ม',
   kindDeductOpt: 'หักแต้ม',
   pointsPerTime: 'แต้มต่อครั้ง',
@@ -171,6 +172,7 @@ export const S = {
   hideActivity: 'ซ่อนกิจกรรมนี้',
   save: 'บันทึก',
   bonusListLabel: 'โบนัส 7 วัน +{b}',
+  activitiesEmpty: 'ยังไม่มีกิจกรรม', // สถานะว่างหน้าจัดการกิจกรรม (ตามภาพออกแบบ)
   hiddenBadge: 'ซ่อน',
 
   // ฟอร์มรางวัล

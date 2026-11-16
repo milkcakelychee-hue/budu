@@ -103,6 +103,9 @@ export function subscribe(coupleId, onChange) {
       { event: '*', schema: 'public', table: T(name), filter: `couple_id=eq.${coupleId}` },
       () => onChange(name));
   }
+  // Realtime กรอง DELETE ด้วยคอลัมน์ไม่ได้ (แถวที่ลบไม่มีข้อมูลให้เทียบ) → ฟังการลบรางวัลแบบไม่กรอง แล้วโหลดใหม่
+  // payload มีแค่ id ของแถวที่ลบ ไม่มีข้อมูลอื่นของคู่ใด
+  channel.on('postgres_changes', { event: 'DELETE', schema: 'public', table: T('rewards') }, () => onChange('rewards'));
   channel.subscribe();
   return channel;
 }

@@ -1,6 +1,6 @@
 // BuDu service worker · แคชเฉพาะไฟล์แอป ห้ามแคชคำขอไป Supabase
 // เปลี่ยนเลขเวอร์ชันทุกครั้งที่อัปเดตไฟล์
-const CACHE = 'budu-v3';
+const CACHE = 'budu-v5';
 const FILES = [
   './',
   'index.html',

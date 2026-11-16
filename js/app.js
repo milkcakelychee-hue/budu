@@ -24,8 +24,8 @@ const ROUTES = {
   stats: { view: stats, tab: 'stats', nav: true },
   history: { view: history, tab: 'stats', nav: true },
   settings: { view: settings, tab: 'settings', nav: true },
-  'manage-activities': { view: manageActivities, tab: 'settings', nav: true },
-  'manage-rewards': { view: manageRewards, tab: 'settings', nav: true },
+  'manage-activities': { view: manageActivities, tab: 'settings', nav: false },
+  'manage-rewards': { view: manageRewards, tab: 'settings', nav: false },
 };
 
 const TABS = [
@@ -66,6 +66,8 @@ function route() {
   const r = ROUTES[name];
   navEl.hidden = !r.nav;
   if (r.nav) renderNav(r.tab);
+  document.querySelectorAll('.sheet-wrap').forEach(w => w.remove());
+  document.body.classList.remove('sheet-open');
   appEl.innerHTML = '';
   r.view.render(appEl, params);
   window.scrollTo(0, 0);
