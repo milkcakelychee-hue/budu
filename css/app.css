@@ -177,7 +177,7 @@ body.sheet-open { overflow: hidden; }
 .sheet-scrim { position: absolute; inset: 0; background: var(--scrim); }
 .sheet {
   position: absolute; left: 0; right: 0; bottom: 0; max-width: 480px; margin: 0 auto;
-  max-height: calc(100vh - var(--safe-top) - 24px); overflow-y: auto; overscroll-behavior: contain;
+  max-height: calc(100% - var(--safe-top) - 16px); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;
   background: var(--sheet-bg); border-radius: var(--r-sheet) var(--r-sheet) 0 0;
   padding: 10px 20px calc(var(--safe-bottom) + 28px); display: flex; flex-direction: column; gap: 12px;
 }
@@ -190,7 +190,7 @@ body.sheet-open { overflow: hidden; }
 .field-label { font-size: 13px; font-weight: 500; color: var(--text-3); }
 .text-input {
   height: 50px; border-radius: 16px; border: 1.5px solid #DADAD6; background: var(--sheet-bg);
-  padding: 0 16px; font-size: 17px; width: 100%; outline: none;
+  padding: 0 16px; font-size: 17px; width: 100%; min-width: 0; outline: none;
 }
 .text-input:focus { border-color: var(--text); }
 .seg { display: flex; padding: 4px; border-radius: 999px; background: var(--card-foot); }
@@ -201,7 +201,11 @@ body.sheet-open { overflow: hidden; }
 .row2 > * { flex: 1; min-width: 0; }
 .stepper { display: flex; align-items: center; justify-content: space-between; background: var(--card-foot); border-radius: 16px; padding: 5px 6px; }
 .step-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid #DADAD6; background: var(--sheet-bg); display: flex; align-items: center; justify-content: center; cursor: pointer; }
-.step-val { font-family: var(--font-head); font-size: 24px; }
+.step-val { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-head); font-size: 24px; }
+.step-input { width: 100%; min-width: 0; max-width: 4.5ch; border: 0; background: transparent; color: inherit; font: inherit; text-align: center; padding: 0; outline: none; border-bottom: 1.5px dashed transparent; }
+.step-input:focus { border-bottom-color: currentColor; }
+.sheet-top { display: flex; margin-bottom: -4px; }
+.sheet .field, .sheet .row2 { min-width: 0; }
 .icon-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 7px; }
 .icon-grid button { height: 44px; border-radius: 13px; border: 1px solid #E6E6E3; background: var(--sheet-bg); display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .icon-grid button.on { border: 2px solid var(--pink); background: var(--pink-soft); }

@@ -29,7 +29,12 @@ export function openSheet(html) {
   wrap.innerHTML = `<div class="sheet-scrim"></div><div class="sheet" role="dialog" aria-modal="true"><div class="sheet-handle"></div>${html}</div>`;
   document.body.appendChild(wrap);
   document.body.classList.add('sheet-open');
-  const closers = [];
+  // ให้แผ่นล่างพอดีกับพื้นที่ที่มองเห็นจริง (ตอนคีย์บอร์ด iPhone เปิด)
+  const vv = window.visualViewport;
+  const fit = () => { if (vv) { wrap.style.top = vv.offsetTop + 'px'; wrap.style.height = vv.height + 'px'; wrap.style.bottom = 'auto'; } };
+  fit();
+  vv?.addEventListener('resize', fit); vv?.addEventListener('scroll', fit);
+  const closers = [() => { vv?.removeEventListener('resize', fit); vv?.removeEventListener('scroll', fit); }];
   const close = () => {
     if (!wrap.isConnected) return;
     wrap.remove();
@@ -70,20 +75,27 @@ export const switchRow = (label, name, on) =>
   `<label class="switch-row">${esc(label)}<input type="checkbox" class="switch" name="${name}" ${on ? 'checked' : ''}></label>`;
 
 export const stepper = (name, value, { sign = '+', min = 1, max = 999 } = {}) =>
-  `<div class="stepper" data-min="${min}" data-max="${max}" data-sign="${sign}">
+  `<div class="stepper" data-min="${min}" data-max="${max}">
     <button type="button" class="step-btn" data-step="-1" aria-label="${S.a11yDecrease}">${svgIcon(UI_ICONS.minus, { size: 18, width: 1.8 })}</button>
-    <span class="step-val">${sign}${value}</span>
-    <input type="hidden" name="${name}" value="${value}">
+    <label class="step-val"><span class="step-sign">${sign}</span><input class="step-input" type="text" inputmode="numeric" pattern="[0-9]*" name="${name}" value="${value}" autocomplete="off"></label>
     <button type="button" class="step-btn" data-step="1" aria-label="${S.a11yIncrease}">${svgIcon(UI_ICONS.plus, { size: 18, width: 1.8 })}</button>
   </div>`;
 
+// กด -/+ หรือพิมพ์ตัวเลขเองได้ · ค่าถูกบีบให้อยู่ในช่วง min–max ตอนออกจากช่อง
 export function bindSteppers(root) {
   root.querySelectorAll('.stepper').forEach(st => {
-    const input = st.querySelector('input'), out = st.querySelector('.step-val');
-    const min = +st.dataset.min, max = +st.dataset.max, sign = st.dataset.sign;
+    const input = st.querySelector('input');
+    const min = +st.dataset.min, max = +st.dataset.max;
+    const clamp = () => {
+      const n = parseInt(input.value.replace(/\D/g, ''), 10);
+      input.value = Math.min(max, Math.max(min, Number.isNaN(n) ? min : n));
+    };
+    input.addEventListener('input', () => { input.value = input.value.replace(/\D/g, '').slice(0, String(max).length); });
+    input.addEventListener('blur', clamp);
+    input.addEventListener('focus', () => input.select());
     st.querySelectorAll('.step-btn').forEach(b => b.addEventListener('click', () => {
-      const v = Math.min(max, Math.max(min, +input.value + +b.dataset.step));
-      input.value = v; out.textContent = `${sign}${v}`;
+      clamp();
+      input.value = Math.min(max, Math.max(min, +input.value + +b.dataset.step));
     }));
   });
 }

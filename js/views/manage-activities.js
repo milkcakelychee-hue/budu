@@ -67,6 +67,7 @@ function openForm(act, kindForNew = 'earn') {
   let icon = v.icon;
 
   const { el, close } = openSheet(`<form class="sheet-form" style="display:contents" novalidate>
+    <div class="sheet-top"><button type="button" class="round-btn" data-close aria-label="${S.a11yBack}">${svgIcon(UI_ICONS.back, { size: 20 })}</button></div>
     <h2 class="sheet-title">${esc(isNew ? S.activityAdd : S.activityEdit)}</h2>
     ${field(S.activityName, `<input class="text-input" name="name" maxlength="60" autocomplete="off" value="${esc(v.name)}">`)}
     ${field(S.kindLabel, isNew
@@ -82,6 +83,7 @@ function openForm(act, kindForNew = 'earn') {
   </form>`);
 
   const form = el.querySelector('form');
+  el.querySelector('[data-close]').onclick = close;
   const drawKind = () => {
     // ค่าที่กรอกไว้แล้วคงไว้เมื่อสลับชนิด
     const pts = form.elements.points?.value ?? v.points;
@@ -112,8 +114,8 @@ function openForm(act, kindForNew = 'earn') {
         id: act?.id ?? null,
         name,
         kind,
-        points: +form.elements.points.value,
-        streak_bonus: kind === 'earn' ? +form.elements.bonus.value : v.streak_bonus,
+        points: Math.max(1, +form.elements.points.value || 1),
+        streak_bonus: kind === 'earn' ? Math.max(0, +form.elements.bonus.value || 0) : v.streak_bonus,
         icon,
         streak_enabled: kind === 'earn' ? form.elements.streak.checked : false,
         is_active: !form.elements.hidden.checked,
