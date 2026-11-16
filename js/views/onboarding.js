@@ -88,7 +88,7 @@ function viewPair() {
     ${joined
       ? `<div class="status-card done"><span class="status-check">${svgIcon(UI_ICONS.check, { size: 16, stroke: '#fff', width: 2.4 })}</span><span>${esc(S.pairDone)}</span></div>`
       : `<div class="status-card"><span class="spinner"></span><span>${esc(S.pairWaiting)}</span></div>`}
-    <div class="ob-actions${joined ? '' : ' dim'}"><button type="button" class="btn btn-primary" data-act="enter" ${joined ? '' : 'disabled'}>${esc(S.enterApp)}</button></div>`;
+    <div class="ob-actions"><button type="button" class="btn btn-primary" data-act="enter">${esc(S.enterApp)}</button></div>`;
 }
 
 function viewCode() {
