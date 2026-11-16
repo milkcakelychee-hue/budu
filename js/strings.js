@@ -164,7 +164,6 @@ export const S = {
   activityAdd: 'เพิ่มกิจกรรม',
   activityEdit: 'แก้กิจกรรม',
   activityName: 'ชื่อกิจกรรม',
-  activityNamePh: 'เช่น นอนก่อน 23.30',
   kindLabel: 'ชนิด',
   kindEarnOpt: 'ให้แต้ม',
   kindDeductOpt: 'หักแต้ม',

@@ -68,7 +68,7 @@ function openForm(act, kindForNew = 'earn') {
 
   const { el, close } = openSheet(`<form class="sheet-form" style="display:contents" novalidate>
     <h2 class="sheet-title">${esc(isNew ? S.activityAdd : S.activityEdit)}</h2>
-    ${field(S.activityName, `<input class="text-input" name="name" maxlength="60" autocomplete="off" placeholder="${esc(S.activityNamePh)}" value="${esc(v.name)}">`)}
+    ${field(S.activityName, `<input class="text-input" name="name" maxlength="60" autocomplete="off" value="${esc(v.name)}">`)}
     ${field(S.kindLabel, isNew
       ? `<div class="seg"><button type="button" data-kind="earn">${esc(S.kindEarnOpt)}</button><button type="button" data-kind="deduct">${esc(S.kindDeductOpt)}</button></div>`
       : `<span class="kind-badge">${esc(kind === 'earn' ? S.kindEarnOpt : S.kindDeductOpt)}</span>`)}
