@@ -2,6 +2,15 @@
 html, body { margin: 0; }
 html { background: var(--bg); }
 /* ล็อกจอ: ไม่ซูมเมื่อแตะ/แตะสองครั้ง ไม่เด้งเมื่อดึงสุดขอบ ไม่เลื่อนซ้ายขวา แต่ยังเลื่อนขึ้นลงได้ */
+/* พื้นหลังลากขึ้นไปใต้แถบเวลา/แบต (status bar แบบโปร่ง ตัวหนังสือขาวเสมอ)
+   โหมดสว่าง: เงาจางที่ขอบบนให้เวลา/แบตสีขาวยังอ่านออก */
+@media (prefers-color-scheme: light) {
+  body::before {
+    content: ''; position: fixed; top: 0; left: 0; right: 0; z-index: 40; pointer-events: none;
+    height: calc(var(--safe-top) + 12px);
+    background: linear-gradient(180deg, rgba(17,17,17,.38), rgba(17,17,17,0));
+  }
+}
 html, body { overscroll-behavior: none; overflow-x: hidden; touch-action: pan-y; }
 body {
   min-height: 100vh;
@@ -556,6 +565,9 @@ button.hrow { cursor: pointer; }
 .copy-btn { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--pink); display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .set-card { margin: 14px 20px 0; background: var(--card); border-radius: 24px; padding: 2px 16px; }
 .set-card .list-sep { margin-left: 52px; }
+.wn-block { margin-top: 4px; }
+.wn-ver { font-family: var(--font-mono); font-size: 12px; letter-spacing: .6px; color: var(--text-2); }
+.wn-list { margin: 6px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; line-height: 1.6; }
 .set-row { display: flex; align-items: center; gap: 12px; min-height: 58px; width: 100%; background: none; border: 0; padding: 0; text-align: left; text-decoration: none; color: var(--text); cursor: pointer; }
 .set-row:disabled { opacity: 1; cursor: default; }
 .set-row[data-export]:disabled { opacity: .4; }

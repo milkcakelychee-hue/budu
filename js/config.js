@@ -2,7 +2,7 @@
 // ใช้เฉพาะ publishable/anon key (เปิดเผยได้ ความปลอดภัยอยู่ที่ RLS + ฟังก์ชันฐานข้อมูล)
 // ห้ามใส่ service_role / secret key ในไฟล์นี้หรือที่ใดใน repo
 export const APP_NAME = 'BuDu';
-export const APP_VERSION = '1.0.0';
+export const APP_VERSION = '1.1.0';
 
 export const SUPABASE_URL = 'https://riudqjmefgsdyyumbepd.supabase.co';
 export const SUPABASE_ANON_KEY = 'sb_publishable_RDdo7sP9ZHmAQVHyRXRjWw_dk-mCZlg';

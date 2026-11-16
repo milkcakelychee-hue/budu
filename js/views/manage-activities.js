@@ -32,7 +32,7 @@ function row(a) {
       ${earn && a.streak_enabled ? `<div class="list-meta">${esc(t('bonusListLabel', { b: a.streak_bonus }))}</div>` : ''}
     </div>
     ${a.is_active ? '' : hiddenBadge()}
-    <span class="list-pts${earn ? ' earn' : ''}">${earn ? '+' : '−'}${a.points}</span>
+    <span class="list-pts${earn ? ' earn' : ''}">${earn ? '' : '−'}${a.points}</span>
     ${chevron()}
   </button>`;
 }
@@ -92,7 +92,7 @@ function openForm(act, kindForNew = 'earn') {
     const streakOn = form.elements.streak ? form.elements.streak.checked : v.streak_enabled;
     el.querySelectorAll('[data-kind]').forEach(b => b.classList.toggle('on', b.dataset.kind === kind));
     el.querySelector('.kind-fields').innerHTML = kind === 'earn'
-      ? `<div class="row2">${field(S.pointsPerTime, stepper('points', pts))}${field(S.bonus7, stepper('bonus', bonus, { min: 0 }))}</div>
+      ? `<div class="row2">${field(S.pointsPerTime, stepper('points', pts, { sign: '' }))}${field(S.bonus7, stepper('bonus', bonus, { min: 0 }))}</div>
          ${field(S.frequencyLabel, `<div class="seg"><button type="button" data-once="1">${esc(S.onceADay)}</button><button type="button" data-once="0">${esc(S.manyADay)}</button></div>`)}`
       : field(S.deductPerTime, stepper('points', pts, { sign: '−' }));
     el.querySelector('.streak-row').innerHTML = kind === 'earn' ? switchRow(S.streakToggle, 'streak', streakOn) : '';

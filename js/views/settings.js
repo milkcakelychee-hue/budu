@@ -1,6 +1,6 @@
 // ตั้งค่า: โปรไฟล์ · รหัสจับคู่ (คัดลอก) · จัดการกิจกรรม/รางวัล/ส่งออกข้อมูล (เฉพาะปรายฟ้า) · ออกจากเครื่องนี้ · เกี่ยวกับแอป
-import { S } from '../strings.js';
-import { esc, pageHead, chevron, confirmSheet, noticeSheet } from '../ui.js';
+import { S, t } from '../strings.js';
+import { esc, pageHead, chevron, confirmSheet, noticeSheet, openSheet } from '../ui.js';
 import { svgIcon, UI_ICONS, ACTIVITY_ICONS } from '../icons.js';
 import { APP_NAME, APP_VERSION } from '../config.js';
 import * as api from '../api.js';
@@ -45,11 +45,12 @@ export function render(el) {
         ${row(ICON_EXPORT, S.exportData, `data-export ${store.canWrite() ? '' : 'disabled'}`)}
       </div>` : ''}
       <div class="set-card">${row(ICON_OUT, S.signOut, 'data-signout', '', ' danger')}</div>
-      <div class="set-card">${row(ICON_INFO, S.about, 'data-about disabled', `<span class="list-meta">${esc(APP_NAME)} · ${esc(APP_VERSION)}</span>`, ' static')}</div>
+      <div class="set-card">${row(ICON_INFO, S.about, 'data-about', `<span class="list-meta">${esc(APP_NAME)} · ${esc(APP_VERSION)}</span>${chevron()}`)}</div>
     </section>`;
 
     el.querySelector('[data-copy]').onclick = () => { if (pairCode) navigator.clipboard?.writeText(pairCode).catch(() => {}); };
     el.querySelector('[data-export]')?.addEventListener('click', e => exportData(e.currentTarget));
+    el.querySelector('[data-about]').onclick = openWhatsNew;
     el.querySelector('[data-signout]').onclick = async () => {
       if (document.querySelector('.sheet-wrap')) return;
       const [title, body] = S.signOutConfirm.split('? ');
@@ -61,6 +62,18 @@ export function render(el) {
   draw();
   // รหัสจับคู่: โหลดจากเซิร์ฟเวอร์ (เก็บไว้ในหน่วยความจำ ไม่ใส่ใน URL/ที่เก็บในเครื่อง)
   if (!pairCode) api.getPairCode().then(c => { pairCode = c; if (el.isConnected) draw(); }).catch(() => {});
+}
+
+// มีอะไรใหม่: รายการฟีเจอร์หลักของแต่ละเวอร์ชัน (S.changelog) ใหม่สุดอยู่บน
+function openWhatsNew() {
+  if (document.querySelector('.sheet-wrap')) return;
+  const { el, close } = openSheet(`<h2 class="sheet-title">${esc(S.whatsNew)}</h2>
+    ${S.changelog.map(c => `<div class="wn-block">
+      <div class="wn-ver">${esc(t('versionLabel', { v: c.version }))}</div>
+      <ul class="wn-list">${c.items.map(i => `<li>${esc(i)}</li>`).join('')}</ul>
+    </div>`).join('')}
+    <button type="button" class="btn btn-secondary" data-close>${esc(S.close)}</button>`);
+  el.querySelector('[data-close]').onclick = close;
 }
 
 // ส่งออก JSON: ใช้หน้าจอแชร์ของ iPhone ถ้ามี ไม่งั้นดาวน์โหลดไฟล์
