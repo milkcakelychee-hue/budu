@@ -145,7 +145,6 @@ function draw() {
     : `<div class="today-empty"><div class="corner-glow"></div>
         <span class="empty-ico tile">${svgIcon(admin ? UI_ICONS.plus : UI_ICONS.list, { size: 26 })}</span>
         <div class="empty-text">${esc(admin ? S.todayEmptyAdmin : S.todayEmptyPartner)}</div>
-        ${admin ? `<a class="btn-pill" href="#/manage-activities/new">${svgIcon(UI_ICONS.plus, { size: 18, stroke: '#fff', width: 2 })}${esc(S.todayEmptyAdminButton)}</a>` : ''}
       </div>`;
 
   root.innerHTML = `<section class="screen">
@@ -156,7 +155,7 @@ function draw() {
     </header>
     ${balanceCard()}
     <div class="sec-head"><h2 class="sec-title inline">${esc(S.routinesTitle)}</h2>
-      ${admin ? `<a class="sec-link" href="#/manage-activities/new">${esc(S.addActivityLink)}</a>` : ''}</div>
+      ${admin ? `<a class="btn-pill sm" href="#/manage-activities/new">${svgIcon(UI_ICONS.plus, { size: 16, stroke: 'currentColor', width: 2 })}${esc(S.todayEmptyAdminButton)}</a>` : ''}</div>
     ${routines}
     ${pendingSection()}
   </section>`;

@@ -97,11 +97,21 @@ store.start();
 if ('serviceWorker' in navigator) {
   // updateViaCache: 'none' = ตรวจ sw.js ใหม่ทุกครั้งที่เปิดแอป
   navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
-    .then(reg => reg.update()).catch(() => {});
-  // มีเวอร์ชันใหม่เข้ามาคุมหน้า → โหลดหน้าใหม่ครั้งเดียวให้เห็นของใหม่ทันที
+    .then(reg => {
+      reg.update();
+      // กลับเข้าแอป (ไม่ต้องปัดทิ้ง) → ตรวจเวอร์ชันใหม่ทุกครั้ง
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') reg.update().catch(() => {});
+      });
+    }).catch(() => {});
+  // มีเวอร์ชันใหม่เข้ามาคุมหน้า → โหลดหน้าใหม่ครั้งเดียว
+  // ถ้ากำลังเปิดแผ่นล่าง (กรอกฟอร์มอยู่) รอจนออกจากแอปครั้งถัดไปค่อยโหลด
   const hadController = !!navigator.serviceWorker.controller;
   let reloaded = false;
+  const reload = () => { if (!reloaded) { reloaded = true; location.reload(); } };
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (hadController && !reloaded) { reloaded = true; location.reload(); }
+    if (!hadController) return;
+    if (!document.querySelector('.sheet-wrap')) return reload();
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') reload(); }, { once: true });
   });
 }

@@ -334,6 +334,8 @@ body.sheet-open { overflow: hidden; }
 .today-empty .empty-text, .plain-empty .empty-text { line-height: 1.7; }
 .btn-pill { height: 48px; padding: 0 22px; border-radius: 999px; background: var(--btn-primary-bg); color: var(--btn-primary-fg); display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 15px; font-weight: 600; }
 .plain-empty .btn-pill { height: 44px; }
+.btn-pill.sm { height: 38px; padding: 0 16px; font-size: 14px; gap: 6px; }
+.sec-head:has(.btn-pill) { align-items: center; }
 .pend-list { display: flex; flex-direction: column; gap: 12px; padding: 0 20px; }
 .pend-row { background: var(--card); border-radius: 22px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
 .pend-main { flex: 1; min-width: 0; }
