@@ -45,6 +45,7 @@
   --dot-check: #FFFFFF;
   --plus-bg: #111111;
   --plus-fg: #FFFFFF;
+  --bar-deduct: #111111;
 
   /* หัวข้อ/ตัวเลขใหญ่ = Prompt (รวมแถบเมนูล่าง) · เนื้อความ/ป้ายเล็ก = Bai Jamjuree (ผู้ใช้เปลี่ยน 16 พ.ย. 2569 แทนฟอนต์ระบบ) */
   --font-head: 'Prompt', Thonburi, sans-serif;
@@ -98,6 +99,7 @@
     --dot-check: #FFFFFF;
     --plus-bg: #D9567F;
     --plus-fg: #FFFFFF;
+    --bar-deduct: #F5EEF3;
     color-scheme: dark;
   }
 }
