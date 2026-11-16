@@ -530,3 +530,21 @@ button.hrow { cursor: pointer; }
 }
 .deduct-tile .dt-bottom { align-items: center; margin-top: auto; }
 .deduct-tile .dt-count { margin-top: 0; }
+
+/* ---------- ตั้งค่า ---------- */
+.profile-card { margin: 16px 20px 0; position: relative; overflow: hidden; border-radius: 28px; background: var(--card-feature); padding: 20px; display: flex; align-items: center; gap: 16px; }
+.profile-card .cp-glow { width: 240px; height: 240px; right: -70px; top: -90px; }
+.avatar { position: relative; width: 60px; height: 60px; border-radius: 50%; background: var(--card); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.pc-text { position: relative; }
+.pc-name { font-family: var(--font-head); font-size: 28px; line-height: 1.25; }
+.role-badge { margin-top: 4px; height: 24px; padding: 0 10px; border-radius: 999px; background: var(--card); color: var(--pink-deep); font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; }
+.code-row { margin: 14px 20px 0; background: var(--card); border-radius: 24px; padding: 16px 16px 16px 20px; display: flex; align-items: center; justify-content: space-between; }
+.cr-code { font-family: var(--font-head); font-size: 26px; letter-spacing: 2px; }
+.copy-btn { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--pink); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.set-card { margin: 14px 20px 0; background: var(--card); border-radius: 24px; padding: 2px 16px; }
+.set-card .list-sep { margin-left: 52px; }
+.set-row { display: flex; align-items: center; gap: 12px; min-height: 58px; width: 100%; background: none; border: 0; padding: 0; text-align: left; text-decoration: none; color: var(--text); cursor: pointer; }
+.set-row:disabled { opacity: 1; cursor: default; }
+.set-row[data-export]:disabled { opacity: .4; }
+.set-row.danger { color: var(--pink-deep); }
+.set-label { flex: 1; font-size: 16px; font-weight: 500; }
