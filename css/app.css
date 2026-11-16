@@ -1,6 +1,8 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; }
-html { background: var(--bg); }
+/* พื้นหลังอยู่ที่ html (ไม่ใช่ body) เพื่อให้ระบายถึงใต้แถบเวลา/แบตด้วย
+   iPhone รุ่นใหม่วาดพื้นหลังของ html ตรงนั้น ถ้าอยู่ที่ body จะเห็นเป็นแถบสีทึบ */
+html { min-height: 100%; background: var(--bg-fill); background-color: var(--bg); background-attachment: fixed; }
 /* ล็อกจอ: ไม่ซูมเมื่อแตะ/แตะสองครั้ง ไม่เด้งเมื่อดึงสุดขอบ ไม่เลื่อนซ้ายขวา แต่ยังเลื่อนขึ้นลงได้ */
 /* พื้นหลังลากขึ้นไปใต้แถบเวลา/แบต (status bar แบบโปร่ง ตัวหนังสือขาวเสมอ)
    โหมดสว่าง: เงาจางที่ขอบบนให้เวลา/แบตสีขาวยังอ่านออก */
@@ -14,8 +16,7 @@ html { background: var(--bg); }
 html, body { overscroll-behavior: none; overflow-x: hidden; touch-action: pan-y; }
 body {
   min-height: 100vh;
-  background: var(--bg-fill);
-  background-attachment: fixed;
+  background: transparent;
   color: var(--text);
   font-family: var(--font-body);
   font-size: 15px;
