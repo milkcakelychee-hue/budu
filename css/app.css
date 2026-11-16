@@ -377,3 +377,4 @@ body.sheet-open { overflow: hidden; }
 .confirm-preview .icon-tile { background: var(--sheet-bg); }
 .cp-name { flex: 1; font-size: 16px; font-weight: 600; }
 .cp-pts { font-size: 20px; font-weight: 700; color: var(--pink-deep); }
+.rc-hint.done { color: var(--pink); font-weight: 600; }

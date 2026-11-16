@@ -86,7 +86,10 @@ function routineCard(a, today) {
         ${streakOn ? `<div class="rc-box"><div class="rc-k">${esc(S.bonusLabel)}</div><div class="rc-v">${esc(t('bonusValue', { b: a.streak_bonus }))}</div></div>` : ''}
       </div>
       ${streakOn ? `<div class="rc-dots"><div class="dots">${dots}</div><div class="rc-count">${esc(t('dotsCount', { n: filled }))}</div></div>
-      <div class="rc-hint">${esc(t('daysToBonus', { n: daysToBonus(filled === 0 ? 0 : streak), b: a.streak_bonus }))}</div>` : ''}
+      ${filled === RULES.STREAK_LENGTH
+        // วันที่ครบรอบ: ขึ้น "ครบรอบ +{b}" สีชมพู แทน "อีก 7 วันรับโบนัส" (ผู้ใช้กำหนด 16 พ.ย. 2569)
+        ? `<div class="rc-hint done">${esc(t('statsBadgeDone', { b: a.streak_bonus }))}</div>`
+        : `<div class="rc-hint">${esc(t('daysToBonus', { n: daysToBonus(filled === 0 ? 0 : streak), b: a.streak_bonus }))}</div>`}` : ''}
     </div>
     ${foot}
   </article>`;
