@@ -41,11 +41,12 @@ export function openSheet(html) {
 }
 
 // แผ่นยืนยัน · resolve(true) เมื่อกดยืนยัน
-export function confirmSheet({ title, body = '', ok, cancel = S.cancel, danger = false }) {
+export function confirmSheet({ title, body = '', preview = '', ok, cancel = S.cancel, danger = false }) {
   return new Promise(resolve => {
     const { el, close, onClose } = openSheet(`
       <h2 class="sheet-title">${esc(title)}</h2>
       ${body ? `<p class="sheet-body">${esc(body)}</p>` : ''}
+      ${preview}
       <button type="button" class="btn ${danger ? 'btn-danger' : 'btn-primary'}" data-ok>${esc(ok)}</button>
       <button type="button" class="btn btn-secondary" data-cancel>${esc(cancel)}</button>`);
     let result = false;
@@ -95,6 +96,25 @@ export const iconTile = (name, size = 42) =>
 
 export const emptyCard = (icon, text, extra = '') =>
   `<div class="empty-card"><div class="glow-mid"></div><span class="empty-ico">${svgIcon(icon, { size: 26 })}</span><div class="empty-text">${esc(text)}</div>${extra}</div>`;
+
+// เวลาแบบ "ศ. 13 พ.ย. 00:30" (เวลาไทย)
+const TIME_FMT = new Intl.DateTimeFormat('th-TH', { timeZone: 'Asia/Bangkok', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
+export const fmtTime = iso => TIME_FMT.format(new Date(iso));
+
+// ปุ่มที่เขียนข้อมูล: ปิดทันที (กันกดรัว) → รอผล → toast หรือแจ้งผิดพลาด
+export async function act(btn, fn, okText) {
+  if (btn.disabled) return;
+  btn.disabled = true;
+  try {
+    await fn();
+    if (okText) toast(okText);
+    return true;
+  } catch (e) {
+    noticeSheet(e?.message || S.genericError);
+    btn.disabled = false;
+    return false;
+  }
+}
 
 // ---------- toast ----------
 let toastTimer;

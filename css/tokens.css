@@ -41,11 +41,15 @@
 
   --scrim: rgba(17,17,17,.28);
   --sheet-bg: #FFFFFF;
+  --dot-bg: #111111;
+  --dot-check: #FFFFFF;
+  --plus-bg: #111111;
+  --plus-fg: #FFFFFF;
 
-  /* หัวข้อ/ตัวเลขใหญ่ = Prompt (รวมแถบเมนูล่าง) · เนื้อความ = IBM Plex Sans Thai Looped (ผู้ใช้เปลี่ยน 16 พ.ย. 2569 แทนฟอนต์ระบบ) */
+  /* หัวข้อ/ตัวเลขใหญ่ = Prompt (รวมแถบเมนูล่าง) · เนื้อความ/ป้ายเล็ก = Bai Jamjuree (ผู้ใช้เปลี่ยน 16 พ.ย. 2569 แทนฟอนต์ระบบ) */
   --font-head: 'Prompt', Thonburi, sans-serif;
-  --font-body: 'IBM Plex Sans Thai Looped', Thonburi, -apple-system, system-ui, sans-serif;
-  --font-mono: var(--font-body); /* ป้ายเล็ก/วันที่ ใช้ IBM Plex Sans Thai Looped (ผู้ใช้เปลี่ยน) */
+  --font-body: 'Bai Jamjuree', Thonburi, -apple-system, system-ui, sans-serif;
+  --font-mono: var(--font-body); /* ป้ายเล็ก/วันที่ ใช้ Bai Jamjuree (ผู้ใช้เปลี่ยน) */
   --font-logo: 'Gaegu', cursive;
 
   --r-card: 26px;
@@ -90,6 +94,10 @@
     --nav-ring: #1C1620;
     --scrim: rgba(0,0,0,.5);
     --sheet-bg: #1C1620;
+    --dot-bg: #D9567F;
+    --dot-check: #FFFFFF;
+    --plus-bg: #D9567F;
+    --plus-fg: #FFFFFF;
     color-scheme: dark;
   }
 }

@@ -1,7 +1,86 @@
-import { S } from '../strings.js';
-import { placeholder } from '../ui.js';
+// หักแต้ม: สรุปสัปดาห์ · ป้ายเรื่องที่หักแต้ม (ผู้ดูแลกด −) · ประวัติการโดนหักแต้ม · แฟนดูอย่างเดียว
+import { S, t } from '../strings.js';
+import { esc, pageHead, iconTile, confirmSheet, act, fmtTime } from '../ui.js';
+import { svgIcon, UI_ICONS, ACTIVITY_ICONS } from '../icons.js';
+import * as api from '../api.js';
+import * as store from '../store.js';
+import { weekStart, addDays } from '../streak.js';
 
-// หักแต้ม · หน้าเปล่า (ขั้น 1) เติมเนื้อหาในขั้นถัดไป
+let root = null;
+let unsub = null;
+
 export function render(el) {
-  placeholder(el, S.deductTitle, 'หักแต้ม');
+  root = el;
+  unsub?.();
+  unsub = store.onChange(() => { if (root?.isConnected) draw(); else { unsub?.(); unsub = null; } });
+  draw();
+}
+
+function draw() {
+  const { activities, entries, members } = store.state.data;
+  const admin = store.isAdmin();
+  const acts = activities.filter(a => a.kind === 'deduct' && a.is_active).sort((a, b) => a.sort_order - b.sort_order);
+  const deducts = entries.filter(e => e.kind === 'deduct' && e.status === 'confirmed');
+
+  const thisWeek = weekStart(store.todayStr());
+  const lastWeek = addDays(thisWeek, -7);
+  const inWeek = (e, w) => e.entry_date >= w && e.entry_date < addDays(w, 7);
+  const sum = list => list.reduce((s, e) => s + Math.abs(e.points), 0);
+  const weekList = deducts.filter(e => inWeek(e, thisWeek));
+  const lastList = deducts.filter(e => inWeek(e, lastWeek));
+
+  if (!acts.length && !deducts.length) {
+    root.innerHTML = `<section class="screen">${pageHead(S.deductTitle)}
+      <div class="plain-empty">
+        <span class="empty-ico tile">${svgIcon(UI_ICONS.deduct, { size: 26 })}</span>
+        <div class="empty-text">${esc(admin ? S.deductEmpty : S.deductEmptyPartner)}</div>
+        ${admin ? `<a class="btn-pill" href="#/manage-activities/new-deduct">${esc(S.deductEmptyButton)}</a>` : ''}
+      </div></section>`;
+    return;
+  }
+
+  const tiles = acts.map(a => `<div class="deduct-tile">
+    <div class="corner-glow soft"></div>
+    <div class="dt-top">${iconTile(a.icon, 44)}<span class="dt-pts">−${a.points}</span></div>
+    <div class="dt-bottom">
+      <div class="dt-text">
+        <div class="dt-name">${esc(a.name)}</div>
+        <div class="dt-count">${esc(t('deductWeekCount', { n: weekList.filter(e => e.activity_id === a.id).length }))}</div>
+      </div>
+      ${admin ? `<button type="button" class="minus-btn" data-deduct="${a.id}" aria-label="${esc(S.deductTitle)} ${esc(a.name)}" ${store.canWrite() ? '' : 'disabled'}>${svgIcon(UI_ICONS.minus, { size: 18, stroke: 'var(--plus-fg)', width: 2 })}</button>` : ''}
+    </div>
+  </div>`).join('');
+
+  const iconOf = id => activities.find(a => a.id === id)?.icon;
+  const nick = id => members.find(m => m.id === id)?.nickname ?? '';
+  const hist = [...deducts].sort((a, b) => b.created_at.localeCompare(a.created_at)).map(e => `<div class="hist-row">
+      ${iconTile(iconOf(e.activity_id), 40)}
+      <div class="list-main"><div class="hist-name">${esc(e.activity_name)}</div>
+        <div class="list-meta">${esc(fmtTime(e.created_at))} · ${esc(nick(e.created_by))}</div></div>
+      <span class="hist-pts">−${Math.abs(e.points)}</span>
+    </div>`).join('<div class="hist-sep"></div>');
+
+  root.innerHTML = `<section class="screen">
+    ${pageHead(S.deductTitle)}
+    <div class="summary-card">
+      <div class="glow-mid"></div>
+      <div class="bc-label">${esc(S.deductWeekTotal)}</div>
+      <div class="sum-num">−${sum(weekList)}</div>
+      <div class="sum-meta">${esc(t('deductWeekMeta', { n: weekList.length, m: sum(lastList) }))}</div>
+    </div>
+    ${acts.length ? `<h2 class="sec-title sm">${esc(S.deductItems)}</h2><div class="deduct-grid">${tiles}</div>` : ''}
+    ${deducts.length ? `<h2 class="sec-title sm">${esc(S.deductHistory)}</h2><div class="hist-card">${hist}</div>` : ''}
+  </section>`;
+
+  root.querySelectorAll('[data-deduct]').forEach(b => b.onclick = async () => {
+    if (document.querySelector('.sheet-wrap')) return; // กันเปิดแผ่นยืนยันซ้อนเมื่อกดรัว
+    const a = acts.find(x => x.id === b.dataset.deduct);
+    const ok = await confirmSheet({
+      title: S.deductConfirmTitle,
+      preview: `<div class="confirm-preview">${iconTile(a.icon, 44)}<span class="cp-name">${esc(a.name)}</span><span class="cp-pts">−${a.points}</span></div>`,
+      ok: t('deductConfirmButton', { n: a.points }),
+    });
+    if (!ok) return;
+    act(b, async () => { await api.logDeduct(a.id); await store.refresh('entries'); }, t('toastDeducted', { n: a.points }));
+  });
 }

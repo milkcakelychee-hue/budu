@@ -1,6 +1,6 @@
 // BuDu service worker · แคชเฉพาะไฟล์แอป ห้ามแคชคำขอไป Supabase
 // เปลี่ยนเลขเวอร์ชันทุกครั้งที่อัปเดตไฟล์
-const CACHE = 'budu-v7';
+const CACHE = 'budu-v8';
 const FILES = [
   './',
   'index.html',
@@ -9,14 +9,14 @@ const FILES = [
   'css/tokens.css',
   'css/app.css',
   'fonts/gaegu-700-subset.woff2',
-  'fonts/plex-thai-looped-400-latin.woff2',
-  'fonts/plex-thai-looped-400-thai.woff2',
-  'fonts/plex-thai-looped-500-latin.woff2',
-  'fonts/plex-thai-looped-500-thai.woff2',
-  'fonts/plex-thai-looped-600-latin.woff2',
-  'fonts/plex-thai-looped-600-thai.woff2',
-  'fonts/plex-thai-looped-700-latin.woff2',
-  'fonts/plex-thai-looped-700-thai.woff2',
+  'fonts/bai-jamjuree-400-latin.woff2',
+  'fonts/bai-jamjuree-400-thai.woff2',
+  'fonts/bai-jamjuree-500-latin.woff2',
+  'fonts/bai-jamjuree-500-thai.woff2',
+  'fonts/bai-jamjuree-600-latin.woff2',
+  'fonts/bai-jamjuree-600-thai.woff2',
+  'fonts/bai-jamjuree-700-latin.woff2',
+  'fonts/bai-jamjuree-700-thai.woff2',
   'fonts/prompt-400-latin.woff2',
   'fonts/prompt-400-thai.woff2',
   'fonts/prompt-500-latin.woff2',
@@ -34,6 +34,7 @@ const FILES = [
   'js/local.js',
   'js/api.js',
   'js/store.js',
+  'js/streak.js',
   'js/vendor/supabase.js',
   'js/views/onboarding.js',
   'js/views/today.js',
