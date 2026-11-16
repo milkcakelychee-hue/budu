@@ -22,7 +22,7 @@ const shortCode = id => `CP-${id.slice(0, 4)}-${id.slice(4, 8)}`.toUpperCase();
 
 function draw() {
   const c = store.state.data.coupons.find(x => x.id === couponId);
-  const back = `<div class="sub-top"><a class="round-btn" href="#/rewards/coupons" aria-label="ย้อนกลับ">${svgIcon(UI_ICONS.back, { size: 20 })}</a><span class="coupon-crumb">${esc(S.couponsTab)}</span></div>`;
+  const back = `<div class="sub-top"><a class="round-btn" href="#/rewards/coupons" aria-label="${S.a11yBack}">${svgIcon(UI_ICONS.back, { size: 20 })}</a><span class="coupon-crumb">${esc(S.couponsTab)}</span></div>`;
   if (!c) { root.innerHTML = `<section class="screen no-nav">${back}</section>`; return; }
 
   const used = c.status === 'used';

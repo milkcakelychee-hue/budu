@@ -149,6 +149,7 @@ function draw() {
       </div>`;
 
   root.innerHTML = `<section class="screen">
+    <div class="dark-orbs" aria-hidden="true"><span class="o1"></span><span class="o2"></span></div>
     <header class="page-head">
       <div class="page-date">${esc(thaiDate())}</div>
       <div class="greet">${esc(t('greeting', { name: me?.nickname ?? '' }))}</div>

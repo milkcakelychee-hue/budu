@@ -75,7 +75,7 @@ function route() {
 
 function updateOnline() {
   const online = store.state.online;
-  offlineEl.textContent = S.offline;
+  offlineEl.innerHTML = `${svgIcon('M2 2l20 20 M8.5 16.5a5 5 0 0 1 7 0 M5 12.5a10 10 0 0 1 5-2.7 M19 12.5a10 10 0 0 0-2.3-1.6 M2 8.8a15 15 0 0 1 4.5-2.7 M22 8.8A15 15 0 0 0 10.7 5 M12 20h.01', { size: 18, stroke: '#fff', width: 1.8 })}<span>${S.offline}</span>`;
   offlineEl.hidden = online;
   document.body.classList.toggle('is-offline', !online);
 }

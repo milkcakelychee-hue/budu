@@ -71,10 +71,10 @@ export const switchRow = (label, name, on) =>
 
 export const stepper = (name, value, { sign = '+', min = 1, max = 999 } = {}) =>
   `<div class="stepper" data-min="${min}" data-max="${max}" data-sign="${sign}">
-    <button type="button" class="step-btn" data-step="-1" aria-label="ลด">${svgIcon(UI_ICONS.minus, { size: 18, width: 1.8 })}</button>
+    <button type="button" class="step-btn" data-step="-1" aria-label="${S.a11yDecrease}">${svgIcon(UI_ICONS.minus, { size: 18, width: 1.8 })}</button>
     <span class="step-val">${sign}${value}</span>
     <input type="hidden" name="${name}" value="${value}">
-    <button type="button" class="step-btn" data-step="1" aria-label="เพิ่ม">${svgIcon(UI_ICONS.plus, { size: 18, width: 1.8 })}</button>
+    <button type="button" class="step-btn" data-step="1" aria-label="${S.a11yIncrease}">${svgIcon(UI_ICONS.plus, { size: 18, width: 1.8 })}</button>
   </div>`;
 
 export function bindSteppers(root) {
@@ -136,6 +136,6 @@ export function toast(text) {
 
 // หัวหน้าจอแบบมีปุ่มย้อนกลับวงกลม (หน้าจัดการ)
 export const subHead = (title, back) =>
-  `<div class="sub-top"><a class="round-btn" href="${back}" aria-label="ย้อนกลับ">${svgIcon(UI_ICONS.back, { size: 20 })}</a></div><h1 class="sub-title">${esc(title)}</h1>`;
+  `<div class="sub-top"><a class="round-btn" href="${back}" aria-label="${S.a11yBack}">${svgIcon(UI_ICONS.back, { size: 20 })}</a></div><h1 class="sub-title">${esc(title)}</h1>`;
 
 export const chevron = () => `<span class="chev">${svgIcon(UI_ICONS.chevron, { size: 18, width: 1.8 })}</span>`;

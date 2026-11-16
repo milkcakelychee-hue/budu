@@ -31,7 +31,7 @@ export function render(el) {
 }
 
 function backBtn() {
-  return `<div class="ob-top"><button type="button" class="round-btn" data-act="back" aria-label="ย้อนกลับ">${svgIcon(UI_ICONS.back, { size: 20 })}</button></div>`;
+  return `<div class="ob-top"><button type="button" class="round-btn" data-act="back" aria-label="${S.a11yBack}">${svgIcon(UI_ICONS.back, { size: 20 })}</button></div>`;
 }
 
 function title(text) { return `<h1 class="ob-title">${esc(text)}</h1>`; }
