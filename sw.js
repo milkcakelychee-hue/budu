@@ -1,6 +1,6 @@
 // BuDu service worker · แคชเฉพาะไฟล์แอป ห้ามแคชคำขอไป Supabase
 // เปลี่ยนเลขเวอร์ชันทุกครั้งที่อัปเดตไฟล์
-const CACHE = 'budu-v6';
+const CACHE = 'budu-v7';
 const FILES = [
   './',
   'index.html',
@@ -21,6 +21,8 @@ const FILES = [
   'fonts/prompt-400-thai.woff2',
   'fonts/prompt-500-latin.woff2',
   'fonts/prompt-500-thai.woff2',
+  'fonts/prompt-600-latin.woff2',
+  'fonts/prompt-600-thai.woff2',
   'icons/icon-180.png',
   'icons/icon-192.png',
   'icons/icon-512.png',
