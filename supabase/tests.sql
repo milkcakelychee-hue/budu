@@ -240,22 +240,22 @@ select public.budu_sync_streak(current_setting('t.earn')::uuid);
 select budu_test.check('sync_streak ซ้ำไม่เกิดโบนัสซ้ำ',
   (select count(*) = 2 from public.budu_entries where activity_id = current_setting('t.earn')::uuid and kind = 'streak_bonus' and status = 'confirmed'));
 
--- ยกเลิกวันที่ 3 → โบนัสวันที่ 7 และ 14 ถูกยกเลิก (ช่วงใหม่ 4..14 = 11 วัน ครบ 7 ที่วันที่ 10)
+-- ยกเลิกวันที่ 3 → เหลือสะสม 13 วัน วันที่ทำครบ 7 คือวันที่ 8 (นับสะสม ไม่ต้องติดกัน)
 set role authenticated;
 select budu_test.act('a');
 select budu_test.expect_ok('cancel วันที่ 3 ของ streak',
   format('select public.budu_cancel_entry(%L)', (select id from public.budu_entries where activity_id = current_setting('t.earn')::uuid
     and kind = 'earn' and entry_date = date '2026-01-04' and status = 'confirmed')));
 reset role;
-select budu_test.check('ยกเลิกกลางทาง โบนัสปรับเป็นวันที่ 10', budu_test.bonus_days(current_setting('t.earn')::uuid) = '10', budu_test.bonus_days(current_setting('t.earn')::uuid));
+select budu_test.check('ยกเลิกกลางทาง โบนัสปรับเป็นวันที่ 8', budu_test.bonus_days(current_setting('t.earn')::uuid) = '8', budu_test.bonus_days(current_setting('t.earn')::uuid));
 
--- ขาดวันที่ 5: ทำวันที่ 1-4, 6-12 → ช่วง 6..12 = 7 วัน → โบนัสวันที่ 12 เท่านั้น · กิจกรรม streak_bonus = 20
+-- ข้ามวันที่ 5: ทำวันที่ 1-4, 6-11 → สะสมครบ 7 ที่วันที่ 8 · กิจกรรม streak_bonus = 20
 select budu_test.seed(current_setting('t.earn20')::uuid, array[1,2,3,4,6,7,8,9,10,11]);
 select public.budu_sync_streak(current_setting('t.earn20')::uuid);
-select budu_test.check('ขาดวันที่ 5 ยังไม่มีโบนัส', budu_test.bonus_days(current_setting('t.earn20')::uuid) = '', budu_test.bonus_days(current_setting('t.earn20')::uuid));
+select budu_test.check('ข้ามวันได้ สะสมครบ 7 โบนัสวันที่ 8', budu_test.bonus_days(current_setting('t.earn20')::uuid) = '8', budu_test.bonus_days(current_setting('t.earn20')::uuid));
 select budu_test.seed(current_setting('t.earn20')::uuid, array[12]);
 select public.budu_sync_streak(current_setting('t.earn20')::uuid);
-select budu_test.check('ครบ 7 วันติดใหม่ได้โบนัสวันที่ 12', budu_test.bonus_days(current_setting('t.earn20')::uuid) = '12', budu_test.bonus_days(current_setting('t.earn20')::uuid));
+select budu_test.check('วันที่ 12 (สะสม 11) ไม่มีโบนัสเพิ่ม', budu_test.bonus_days(current_setting('t.earn20')::uuid) = '8', budu_test.bonus_days(current_setting('t.earn20')::uuid));
 select budu_test.check('streak_bonus = 20 ได้ +20',
   (select bool_and(points = 20) from public.budu_entries where activity_id = current_setting('t.earn20')::uuid and kind = 'streak_bonus' and status = 'confirmed'));
 

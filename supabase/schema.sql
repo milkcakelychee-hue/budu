@@ -160,15 +160,11 @@ begin
   select * into a from public.budu_activities where id = p_activity_id;
   if not found or a.kind <> 'earn' or not a.streak_enabled then return; end if;
 
-  -- วันที่ที่ควรได้โบนัส: ตำแหน่งที่ 7, 14, 21 ... ของแต่ละช่วงวันติดกัน
+  -- วันที่ที่ควรได้โบนัส: วันที่ทำสะสมครบ 7, 14, 21 ... (ไม่ต้องติดกัน ไม่รีเซ็ตตามวัน)
   select coalesce(array_agg(entry_date), '{}') into owed from (
-    select entry_date,
-           row_number() over (partition by grp order by entry_date) as pos
-    from (
-      select entry_date, entry_date - (row_number() over (order by entry_date))::int as grp
-      from (select distinct entry_date from public.budu_entries
-            where activity_id = a.id and kind = 'earn' and status = 'confirmed') d
-    ) g
+    select entry_date, row_number() over (order by entry_date) as pos
+    from (select distinct entry_date from public.budu_entries
+          where activity_id = a.id and kind = 'earn' and status = 'confirmed') d
   ) r
   where pos % 7 = 0;
 

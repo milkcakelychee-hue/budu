@@ -50,7 +50,7 @@ export const S = {
   viewRewards: 'ดูรางวัล',
   routinesTitle: 'กิจวัตรวันนี้',
   addActivityLink: '+ เพิ่มกิจกรรม',
-  streakDays: 'ติดต่อกัน {n} วัน',
+  streakDays: 'สะสม {n} วัน',
   perTime: 'ได้ต่อครั้ง',
   perTimeValue: '{n} แต้ม',
   bonusLabel: 'ครบ 7 วัน ได้อีก',

@@ -9,28 +9,14 @@ export const diffDays = (a, b) => Math.round((toUTC(a) - toUTC(b)) / 86400000);
 // วันจันทร์ของสัปดาห์ที่มีวันนั้น
 export const weekStart = d => addDays(d, -((new Date(toUTC(d)).getUTCDay() + 7 - RULES.WEEK_STARTS_ON) % 7));
 
+// streak แบบสะสม (ผู้ใช้กำหนด 16 พ.ย. 2569): นับวันที่ทำทั้งหมด ไม่ต้องติดกัน ไม่รีเซ็ตตามวัน
 // dates = วันที่ไม่ซ้ำ เรียงขึ้น ของ entry earn ที่ confirmed ของกิจกรรมเดียว
-export function runsOf(dates) {
-  const runs = [];
-  for (const d of dates) {
-    const last = runs.at(-1);
-    if (last && diffDays(d, last.at(-1)) === 1) last.push(d);
-    else runs.push([d]);
-  }
-  return runs;
-}
-
-// วันที่ที่ควรได้โบนัส: ตำแหน่งที่ 7, 14, 21 ... ในแต่ละช่วงติดกัน
 export function bonusDates(dates) {
-  return runsOf(dates).flatMap(run => run.filter((_, i) => (i + 1) % RULES.STREAK_LENGTH === 0));
+  return dates.filter((_, i) => (i + 1) % RULES.STREAK_LENGTH === 0);
 }
 
-// streak ปัจจุบัน: ช่วงล่าสุดที่จบที่วันนี้ หรือเมื่อวาน (วันนี้ยังไม่ทำไม่ถือว่าขาด) ไม่งั้นเป็น 0
-export function currentStreak(dates, today) {
-  const last = runsOf(dates).at(-1);
-  if (!last) return 0;
-  const gap = diffDays(today, last.at(-1));
-  return gap === 0 || gap === 1 ? last.length : 0;
+export function currentStreak(dates) {
+  return dates.length;
 }
 
 // จุดบนการ์ด (0–7): 0 ถ้า streak = 0 · 7 ถ้า streak % 7 === 0 · ไม่งั้น streak % 7

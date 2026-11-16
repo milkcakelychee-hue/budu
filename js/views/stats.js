@@ -76,6 +76,9 @@ function draw() {
       <div class="wk-label">${dm(w.start)}</div></div>`).join('');
 
   const streakActs = activities.filter(a => a.kind === 'earn' && a.is_active && a.streak_enabled).sort((a, b) => a.sort_order - b.sort_order);
+  // streak ยาวสุดอยู่บน (ผู้ใช้กำหนด 16 พ.ย. 2569)
+  const sk = a => currentStreak(confirmedDates(entries, a.id), today);
+  streakActs.sort((a, b) => sk(b) - sk(a));
 
   root.innerHTML = `<section class="screen">
     ${pageHead(S.statsTitle)}
