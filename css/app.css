@@ -86,3 +86,86 @@ a { color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0s !important; transition-duration: 0s !important; }
 }
+
+/* ---------- ปุ่ม ---------- */
+.btn {
+  width: 100%; height: 52px; border-radius: 999px; border: 0;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 16px; font-weight: 600; cursor: pointer;
+}
+.btn:disabled { opacity: .3; cursor: default; }
+.btn-primary { background: var(--btn-primary-bg); color: var(--btn-primary-fg); }
+.btn-secondary { background: var(--card); color: var(--text); border: 1.5px solid var(--text); }
+.btn-pink { background: var(--pink); color: #fff; height: 50px; }
+.btn-danger { background: var(--pink-deep); color: #fff; }
+.link-btn {
+  background: none; border: 0; min-height: 44px; padding: 0 8px;
+  font-size: 15px; font-weight: 600; color: var(--pink-deep); cursor: pointer;
+}
+.round-btn {
+  width: 44px; height: 44px; border-radius: 50%; background: var(--card);
+  border: 1px solid #E6E6E3; display: flex; align-items: center; justify-content: center; color: var(--text); cursor: pointer;
+}
+.err-line { display: flex; gap: 8px; align-items: center; color: var(--pink-deep); font-size: 14px; font-weight: 600; padding: 10px 24px 0; }
+
+/* ---------- เริ่มต้นใช้ ---------- */
+.onboarding { padding-top: calc(var(--safe-top) + 24px); }
+.ob-top { padding: 0 20px; }
+.ob-title { font-family: var(--font-serif); font-weight: 400; font-size: 32px; line-height: 1.35; margin: 0; padding: 18px 24px 0; }
+.ob-body { margin: 8px 24px 0; font-size: 16px; line-height: 1.7; color: var(--text-3); }
+.ob-actions { padding: 18px 20px 0; }
+.ob-actions.dim { opacity: 1; }
+.ob-link { text-align: center; padding-top: 6px; }
+.ob-hero {
+  margin: 0 20px; position: relative; overflow: hidden; height: 300px; border-radius: 32px;
+  background: var(--card-feature); display: flex; align-items: center; justify-content: center;
+}
+.glow-big { position: absolute; width: 300px; height: 300px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(244,160,192,.95) 0%, rgba(248,196,214,.6) 35%, rgba(237,237,235,0) 70%); }
+.bubble { position: absolute; border-radius: 50%; }
+.bubble.b1 { width: 120px; height: 120px; left: 60px; top: 150px;
+  background: radial-gradient(circle at 40% 30%, #FFFFFF 0%, #F9D3E0 50%, rgba(242,170,195,0) 75%); }
+.bubble.b2 { width: 90px; height: 90px; right: 70px; top: 60px;
+  background: radial-gradient(circle at 40% 30%, #FFFFFF 0%, #F7C2D4 55%, rgba(242,170,195,0) 78%); }
+.ob-hero .logo { position: relative; }
+.note-card { margin: 16px 20px 0; background: var(--card); border-radius: 22px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 1.7; }
+.note-ico { width: 40px; height: 40px; border-radius: 12px; background: var(--pink-soft); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+.role-list { display: flex; flex-direction: column; gap: 12px; padding: 18px 20px 0; }
+.role-card {
+  position: relative; overflow: hidden; width: 100%; text-align: left; border-radius: 28px; padding: 20px;
+  color: var(--text); background: var(--card-feature); border: 2px solid transparent;
+  display: flex; flex-direction: column; gap: 12px; min-height: 160px; cursor: pointer;
+}
+.role-card.on { background: var(--card); border-color: var(--text); }
+.role-glow { position: absolute; width: 220px; height: 220px; right: -70px; top: -90px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(244,170,196,.85) 0%, rgba(255,255,255,0) 70%); }
+.role-row { position: relative; display: flex; justify-content: space-between; width: 100%; }
+.role-ico { width: 48px; height: 48px; border-radius: 15px; background: var(--card); display: flex; align-items: center; justify-content: center; }
+.role-card.on .role-ico { background: var(--icon-tile); }
+.radio { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid #CFCFCB; display: flex; align-items: center; justify-content: center; }
+.role-card.on .radio { background: var(--pink); border-color: var(--pink); }
+.role-name { position: relative; font-family: var(--font-serif); font-size: 26px; }
+.role-desc { position: relative; font-size: 15px; color: var(--text-3); margin-top: -6px; }
+
+.code-card {
+  margin: 20px 20px 0; position: relative; overflow: hidden; border-radius: var(--r-feature);
+  background: var(--card-feature); padding: 30px 20px 20px; display: flex; flex-direction: column; align-items: center; gap: 18px;
+}
+.glow-mid { position: absolute; width: 260px; height: 260px; left: 50%; top: 40%; transform: translate(-50%, -50%); border-radius: 50%;
+  background: var(--feature-glow); }
+.code-text { position: relative; font-family: var(--font-serif); font-size: 44px; letter-spacing: 3px; }
+.code-card .btn { position: relative; }
+.status-card { margin: 14px 20px 0; background: var(--card); border-radius: 20px; padding: 14px 16px; display: flex; gap: 10px; align-items: center; font-size: 15px; }
+.status-card.done { background: var(--pink-soft); color: var(--pink-deep); font-weight: 600; }
+.status-check { width: 28px; height: 28px; border-radius: 50%; background: var(--pink); display: flex; align-items: center; justify-content: center; }
+.spinner { width: 22px; height: 22px; border-radius: 50%; border: 2.5px solid var(--line); border-top-color: var(--pink); }
+
+.ob-input { padding: 22px 20px 0; }
+.code-input {
+  width: 100%; height: 72px; border-radius: 20px; border: 2px solid #DADAD6; background: var(--card);
+  text-align: center; font-family: var(--font-serif); font-size: 32px; letter-spacing: 4px; color: var(--text); outline: none;
+}
+.code-input:focus { border-color: var(--text); }
+.code-input.bad { border-color: var(--pink-deep); }
+.code-input::placeholder { color: #C9C9C5; }

@@ -1,6 +1,7 @@
 // เริ่มแอป · router แบบ hash · แถบเมนูล่าง
 import { S } from './strings.js';
 import { svgIcon, UI_ICONS } from './icons.js';
+import * as store from './store.js';
 
 import * as onboarding from './views/onboarding.js';
 import * as today from './views/today.js';
@@ -56,7 +57,12 @@ function renderNav(active) {
 }
 
 function route() {
-  const { name, params } = parseHash();
+  let { name, params } = parseHash();
+  // ยังไม่ได้จับคู่ → หน้าเริ่มต้นใช้เสมอ
+  if (!store.state.session && name !== 'onboarding') {
+    if (location.hash !== '#/onboarding') { location.replace('#/onboarding'); return; }
+    name = 'onboarding';
+  }
   const r = ROUTES[name];
   navEl.hidden = !r.nav;
   if (r.nav) renderNav(r.tab);
@@ -66,16 +72,25 @@ function route() {
 }
 
 function updateOnline() {
+  const online = store.state.online;
   offlineEl.textContent = S.offline;
-  offlineEl.hidden = navigator.onLine;
-  document.body.classList.toggle('is-offline', !navigator.onLine);
+  offlineEl.hidden = online;
+  document.body.classList.toggle('is-offline', !online);
 }
 
+let hadSession = !!store.state.session;
+store.onChange(() => {
+  updateOnline();
+  // ออกจากเครื่องนี้ / ถูกแทนที่ด้วยเครื่องอื่น → กลับหน้าเริ่มต้นใช้
+  const has = !!store.state.session;
+  if (hadSession && !has) route();
+  hadSession = has;
+});
+
 window.addEventListener('hashchange', route);
-window.addEventListener('online', updateOnline);
-window.addEventListener('offline', updateOnline);
 updateOnline();
 route();
+store.start();
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});

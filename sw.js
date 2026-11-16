@@ -1,6 +1,6 @@
 // BuDu service worker · แคชเฉพาะไฟล์แอป ห้ามแคชคำขอไป Supabase
 // เปลี่ยนเลขเวอร์ชันทุกครั้งที่อัปเดตไฟล์
-const CACHE = 'budu-v2';
+const CACHE = 'budu-v3';
 const FILES = [
   './',
   'index.html',
@@ -18,6 +18,7 @@ const FILES = [
   'js/ui.js',
   'js/local.js',
   'js/api.js',
+  'js/store.js',
   'js/vendor/supabase.js',
   'js/views/onboarding.js',
   'js/views/today.js',
