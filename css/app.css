@@ -1,8 +1,9 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; }
-/* พื้นหลังอยู่ที่ html (ไม่ใช่ body) เพื่อให้ระบายถึงใต้แถบเวลา/แบตด้วย
-   iPhone รุ่นใหม่วาดพื้นหลังของ html ตรงนั้น ถ้าอยู่ที่ body จะเห็นเป็นแถบสีทึบ */
-html { min-height: 100%; background: var(--bg-fill); background-color: var(--bg); background-attachment: fixed; }
+/* ใต้แถบเวลา/แบต iPhone ระบายด้วย "สีพื้นทึบ" ของ html/body (ไม่ใช้พื้นไล่สี)
+   จึงตั้งสีพื้นทึบเป็นสีบนสุดของพื้นไล่สี (--bg-top) ทั้ง html และ body แล้ววางพื้นไล่สีทับ */
+html { min-height: 100%; min-height: -webkit-fill-available; background-color: var(--bg-top); }
+body { background: var(--bg-fill); background-color: var(--bg-top); }
 /* ล็อกจอ: ไม่ซูมเมื่อแตะ/แตะสองครั้ง ไม่เด้งเมื่อดึงสุดขอบ ไม่เลื่อนซ้ายขวา แต่ยังเลื่อนขึ้นลงได้ */
 /* พื้นหลังลากขึ้นไปใต้แถบเวลา/แบต (status bar แบบโปร่ง ตัวหนังสือขาวเสมอ)
    โหมดสว่าง: เงาจางที่ขอบบนให้เวลา/แบตสีขาวยังอ่านออก */
@@ -15,8 +16,7 @@ html { min-height: 100%; background: var(--bg-fill); background-color: var(--bg)
 }
 html, body { overscroll-behavior: none; overflow-x: hidden; touch-action: pan-y; }
 body {
-  min-height: 100vh;
-  background: transparent;
+  min-height: 100lvh;
   color: var(--text);
   font-family: var(--font-body);
   font-size: 15px;
@@ -28,7 +28,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 input, select, textarea { font-size: 16px; } /* กัน Safari ซูม */
 a { color: inherit; }
 
-#app { min-height: 100vh; }
+#app { min-height: 100lvh; }
 .screen {
   max-width: 480px;
   margin: 0 auto;

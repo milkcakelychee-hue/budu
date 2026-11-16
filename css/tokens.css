@@ -10,6 +10,7 @@
 :root {
   --bg: #F6F6F4;
   --bg-fill: #F6F6F4;
+  --bg-top: #F6F6F4;   /* สีพื้นทึบ: iPhone ใช้สีนี้ระบายใต้แถบเวลา/แบต (ไม่ใช้พื้นไล่สี) */
   --card: #FFFFFF;
   --card-feature: #EDEDEB;
   --card-foot: #F3F3F1;
@@ -66,6 +67,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #0E0D14;
+    --bg-top: #3E1A33;
     --bg-fill: linear-gradient(180deg, #3E1A33 0%, #2A1528 22%, #151119 50%, #0E0D14 100%);
     --card: rgba(255,255,255,.07);
     --card-feature: rgba(255,255,255,.06);
