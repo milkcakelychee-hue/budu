@@ -19,7 +19,7 @@ export function render(el) {
 function draw() {
   const { activities, entries, members } = store.state.data;
   const admin = store.isAdmin();
-  const acts = activities.filter(a => a.kind === 'deduct' && a.is_active).sort((a, b) => a.sort_order - b.sort_order);
+  const acts = activities.filter(a => a.kind === 'deduct' && a.is_active).sort((a, b) => b.points - a.points || a.sort_order - b.sort_order);
   const deducts = entries.filter(e => e.kind === 'deduct' && e.status === 'confirmed');
 
   const thisWeek = weekStart(store.todayStr());
@@ -39,12 +39,15 @@ function draw() {
     return;
   }
 
-  const tiles = acts.map(a => `<div class="deduct-tile">
-    <div class="corner-glow soft"></div>
-    <div class="dt-top">${iconTile(a.icon, 44)}<span class="dt-pts">−${a.points}</span></div>
-    <div class="dt-name">${esc(a.name)}</div>
-    <div class="dt-bottom">
-      <div class="dt-count">${esc(t('deductWeekCount', { n: weekList.filter(e => e.activity_id === a.id).length }))}</div>
+  // ป้ายละกิจกรรม เรียงแบบหน้าวันนี้ (แต้มมากไปน้อย)
+  const tiles = acts.map(a => `<div class="routine-row">
+    <div class="rr-main">
+      ${iconTile(a.icon, 40)}
+      <div class="rr-text">
+        <div class="rr-name">${esc(a.name)}</div>
+        <div class="rr-sub">${esc(t('deductWeekCount', { n: weekList.filter(e => e.activity_id === a.id).length }))}</div>
+      </div>
+      <span class="rr-pts">−${a.points}</span>
       ${admin ? `<button type="button" class="minus-btn" data-deduct="${a.id}" aria-label="${esc(S.deductTitle)} ${esc(a.name)}" ${store.canWrite() ? '' : 'disabled'}>${svgIcon(UI_ICONS.minus, { size: 18, stroke: 'var(--plus-fg)', width: 2 })}</button>` : ''}
     </div>
   </div>`).join('');
@@ -68,7 +71,7 @@ function draw() {
     </div>
     ${acts.length || admin ? `<div class="sec-head sm"><h2 class="sec-title inline sm">${esc(S.deductItems)}</h2>
       ${admin ? `<a class="btn-pill sm" href="#/manage-activities/new-deduct">${svgIcon(UI_ICONS.plus, { size: 16, stroke: 'currentColor', width: 2 })}${esc(S.activityAdd)}</a>` : ''}</div>` : ''}
-    ${acts.length ? `<div class="deduct-grid">${tiles}</div>` : ''}
+    ${acts.length ? `<div class="routine-rows">${tiles}</div>` : ''}
     ${deducts.length ? `<h2 class="sec-title sm">${esc(S.deductHistory)}</h2><div class="hist-card">${hist}</div>` : ''}
   </section>`;
 

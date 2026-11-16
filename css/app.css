@@ -606,7 +606,8 @@ button.hrow { cursor: pointer; }
   .screen { position: relative; }
   .bc-label { color: #BFB3BD; }
   .bc-bar, .rt-progress .bar { background: rgba(255,255,255,.1); }
-  .pill-ico { background: rgba(255,255,255,.07); }
+  .pill-ico { background: rgba(255,255,255,.18); }
+  .pill-ico svg { stroke: #fff; }
   .routine-card .corner-glow { background: radial-gradient(120% 90% at 100% 0%, rgba(242,170,195,.75) 0%, rgba(246,200,216,.45) 30%, rgba(255,255,255,0) 60%); opacity: .35; }
   .rc-icon { background: rgba(255,255,255,.1); color: var(--text); }
   .rc-foot { background: rgba(255,255,255,.08); }
