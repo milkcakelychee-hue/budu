@@ -87,6 +87,7 @@ export const declineCouponRequest = couponId => rpc('decline_coupon_request', { 
 export const upsertActivity = a => rpc('upsert_activity', {
   p_id: a.id ?? null, p_name: a.name, p_kind: a.kind, p_points: a.points, p_streak_bonus: a.streak_bonus,
   p_icon: a.icon, p_streak_enabled: a.streak_enabled, p_is_active: a.is_active,
+  p_once_per_day: a.once_per_day,
 });
 export const upsertReward = r => rpc('upsert_reward', { p_id: r.id ?? null, p_name: r.name, p_cost: r.cost, p_is_active: r.is_active });
 export const deleteReward = id => rpc('delete_reward', { p_id: id });

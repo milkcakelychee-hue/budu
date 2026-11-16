@@ -1,6 +1,8 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; }
 html { background: var(--bg); }
+/* ล็อกจอ: ไม่ซูมเมื่อแตะ/แตะสองครั้ง ไม่เด้งเมื่อดึงสุดขอบ ไม่เลื่อนซ้ายขวา แต่ยังเลื่อนขึ้นลงได้ */
+html, body { overscroll-behavior: none; overflow-x: hidden; touch-action: pan-y; }
 body {
   min-height: 100vh;
   background: var(--bg-fill);
@@ -305,6 +307,7 @@ body.sheet-open { overflow: hidden; }
 .sec-link { font-size: 14px; font-weight: 600; color: var(--text); }
 .routine-list { display: flex; flex-direction: column; gap: 14px; padding: 0 20px; }
 .routine-card { position: relative; overflow: hidden; background: var(--card); border-radius: var(--r-card); box-shadow: var(--card-shadow); }
+.routine-card.used { opacity: .5; }
 .corner-glow { position: absolute; inset: 0; background: var(--corner-glow); pointer-events: none; }
 .corner-glow.soft { background: radial-gradient(120% 90% at 100% 0%, rgba(242,170,195,.45) 0%, rgba(255,255,255,0) 55%); }
 .rc-icon { position: absolute; right: 22px; top: 22px; width: 44px; height: 44px; border-radius: 14px; background: rgba(255,255,255,.8); display: flex; align-items: center; justify-content: center; color: #111; }

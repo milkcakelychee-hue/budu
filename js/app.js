@@ -90,6 +90,10 @@ store.onChange(() => {
 });
 
 window.addEventListener('hashchange', route);
+
+// ไม่ให้ซูม: iOS ไม่เชื่อ user-scalable=no จึงกันการถ่างนิ้วตรงนี้ (แตะสองครั้งกันด้วย touch-action ใน CSS)
+for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
+document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 updateOnline();
 route();
 store.start();

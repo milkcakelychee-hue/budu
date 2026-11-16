@@ -52,14 +52,17 @@ function balanceCard() {
 // ---------- การ์ดกิจวัตร ----------
 function routineCard(a, today) {
   const entries = store.state.data.entries;
-  const todayEntry = entries.find(e => e.activity_id === a.id && e.kind === 'earn' && e.entry_date === today && (e.status === 'pending' || e.status === 'confirmed'));
+  const once = a.once_per_day !== false;
+  const todayEntries = entries.filter(e => e.activity_id === a.id && e.kind === 'earn' && e.entry_date === today && (e.status === 'pending' || e.status === 'confirmed'));
+  // วันละครั้ง: รายการวันนี้ (ยืนยันแล้วก่อน) ล็อกการ์ด · หลายครั้งต่อวัน: กดได้ตลอด ไม่ล็อก
+  const todayEntry = once ? (todayEntries.find(e => e.status === 'confirmed') ?? todayEntries[0]) : null;
+  const doneToday = todayEntries.some(e => e.status === 'confirmed');
   const streak = currentStreak(confirmedDates(entries, a.id), today);
-  const doneToday = todayEntry?.status === 'confirmed';
   // รอบที่ครบ 7 แล้วเมื่อวาน → วันนี้เริ่มรอบใหม่
   const filled = !doneToday && streak > 0 && streak % RULES.STREAK_LENGTH === 0 ? 0 : dotsFilled(streak);
   const dots = Array.from({ length: RULES.STREAK_LENGTH }, (_, i) => {
     if (i < filled) return `<span class="dot on">${svgIcon(UI_ICONS.check, { size: 14, stroke: 'var(--dot-check)', width: 2.4 })}</span>`;
-    if (i === filled && !todayEntry) return '<span class="dot today"></span>';
+    if (i === filled && !todayEntries.length) return '<span class="dot today"></span>';
     return '<span class="dot"></span>';
   }).join('');
 
@@ -75,7 +78,8 @@ function routineCard(a, today) {
   }
 
   const streakOn = a.streak_enabled;
-  return `<article class="routine-card">
+  // วันละครั้งที่กดแล้ว (ทำแล้ว/รอยืนยัน): การ์ดจางลง กดไม่ได้จนวันใหม่หรือยกเลิกในประวัติ
+  return `<article class="routine-card${todayEntry ? ' used' : ''}">
     <div class="corner-glow"></div>
     <div class="rc-icon">${svgIcon(ACTIVITY_ICONS[a.icon] || ACTIVITY_ICONS.star, { size: 22 })}</div>
     <div class="rc-body">
@@ -153,11 +157,11 @@ function draw() {
       <div class="page-date">${esc(thaiDate())}</div>
       <div class="greet">${esc(t('greeting', { name: me?.nickname ?? '' }))}</div>
     </header>
+    ${pendingSection()}
     ${balanceCard()}
     <div class="sec-head"><h2 class="sec-title inline">${esc(S.routinesTitle)}</h2>
       ${admin ? `<a class="btn-pill sm" href="#/manage-activities/new">${svgIcon(UI_ICONS.plus, { size: 16, stroke: 'currentColor', width: 2 })}${esc(S.todayEmptyAdminButton)}</a>` : ''}</div>
     ${routines}
-    ${pendingSection()}
   </section>`;
 
   root.querySelectorAll('[data-earn]').forEach(b => b.onclick = () => {

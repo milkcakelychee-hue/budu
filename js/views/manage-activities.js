@@ -62,8 +62,9 @@ function draw() {
 
 function openForm(act, kindForNew = 'earn') {
   const isNew = !act;
-  const v = act ?? { name: '', kind: kindForNew, points: 5, streak_bonus: RULES.STREAK_BONUS_DEFAULT, icon: 'moon', streak_enabled: true, is_active: true };
+  const v = act ?? { name: '', kind: kindForNew, points: 5, streak_bonus: RULES.STREAK_BONUS_DEFAULT, icon: 'moon', streak_enabled: true, is_active: true, once_per_day: true };
   let kind = v.kind;
+  let once = v.once_per_day ?? true;
   let icon = v.icon;
 
   const { el, close } = openSheet(`<form class="sheet-form" style="display:contents" novalidate>
@@ -91,10 +92,14 @@ function openForm(act, kindForNew = 'earn') {
     const streakOn = form.elements.streak ? form.elements.streak.checked : v.streak_enabled;
     el.querySelectorAll('[data-kind]').forEach(b => b.classList.toggle('on', b.dataset.kind === kind));
     el.querySelector('.kind-fields').innerHTML = kind === 'earn'
-      ? `<div class="row2">${field(S.pointsPerTime, stepper('points', pts))}${field(S.bonus7, stepper('bonus', bonus, { min: 0 }))}</div>`
+      ? `<div class="row2">${field(S.pointsPerTime, stepper('points', pts))}${field(S.bonus7, stepper('bonus', bonus, { min: 0 }))}</div>
+         ${field(S.frequencyLabel, `<div class="seg"><button type="button" data-once="1">${esc(S.onceADay)}</button><button type="button" data-once="0">${esc(S.manyADay)}</button></div>`)}`
       : field(S.deductPerTime, stepper('points', pts, { sign: '−' }));
     el.querySelector('.streak-row').innerHTML = kind === 'earn' ? switchRow(S.streakToggle, 'streak', streakOn) : '';
     bindSteppers(el.querySelector('.kind-fields'));
+    const drawOnce = () => el.querySelectorAll('[data-once]').forEach(b => b.classList.toggle('on', (b.dataset.once === '1') === once));
+    el.querySelectorAll('[data-once]').forEach(b => b.onclick = () => { once = b.dataset.once === '1'; drawOnce(); });
+    drawOnce();
   };
   const drawIcon = () => el.querySelectorAll('[data-icon]').forEach(b => b.classList.toggle('on', b.dataset.icon === icon));
 
@@ -119,6 +124,7 @@ function openForm(act, kindForNew = 'earn') {
         icon,
         streak_enabled: kind === 'earn' ? form.elements.streak.checked : false,
         is_active: !form.elements.hidden.checked,
+        once_per_day: kind === 'earn' ? once : true,
       });
       close();
       store.refresh('activities');

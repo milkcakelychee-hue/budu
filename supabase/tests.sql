@@ -89,12 +89,12 @@ select set_config('t.couple2', (public.budu_create_couple() ->> 'couple_id'), fa
 -- จัดการกิจกรรม/รางวัล
 -- ---------------------------------------------------------------------
 select budu_test.act('a');
-select set_config('t.earn',   (public.budu_upsert_activity(null, 'นอนก่อน 23.30', 'earn', 30, 10, 'moon', true, true)).id::text, false);
-select set_config('t.deduct', (public.budu_upsert_activity(null, 'กินขนมดึก', 'deduct', 50, null, 'snack', false, true)).id::text, false);
-select set_config('t.earn20', (public.budu_upsert_activity(null, 'ดื่มน้ำ', 'earn', 1, 20, 'water', true, true)).id::text, false);
+select set_config('t.earn',   (public.budu_upsert_activity(null, 'นอนก่อน 23.30', 'earn', 30, 10, 'moon', true, true, true)).id::text, false);
+select set_config('t.deduct', (public.budu_upsert_activity(null, 'กินขนมดึก', 'deduct', 50, null, 'snack', false, true, true)).id::text, false);
+select set_config('t.earn20', (public.budu_upsert_activity(null, 'ดื่มน้ำ', 'earn', 1, 20, 'water', true, true, true)).id::text, false);
 select set_config('t.reward', (public.budu_upsert_reward(null, 'Sushiro', 40, true)).id::text, false);
 select budu_test.expect_ok('upsert_activity แก้แล้ว kind ไม่เปลี่ยน',
-  format($$select public.budu_upsert_activity(%L, 'นอนก่อน 23.30', 'deduct', 30, 10, 'moon', true, true)$$, current_setting('t.earn')));
+  format($$select public.budu_upsert_activity(%L, 'นอนก่อน 23.30', 'deduct', 30, 10, 'moon', true, true, true)$$, current_setting('t.earn')));
 select budu_test.check('kind ยังเป็น earn', (select kind = 'earn' from public.budu_activities where id = current_setting('t.earn')::uuid));
 
 -- ---------------------------------------------------------------------
@@ -105,7 +105,7 @@ select budu_test.expect_error('partner log_deduct',      format('select public.b
 select budu_test.expect_error('partner cancel_entry',    format('select public.budu_cancel_entry(%L)', gen_random_uuid()), 'forbidden');
 select budu_test.expect_error('partner decide_entry',    format('select public.budu_decide_entry(%L, true)', gen_random_uuid()), 'forbidden');
 select budu_test.expect_error('partner mark_coupon_used', format('select public.budu_mark_coupon_used(%L)', gen_random_uuid()), 'forbidden');
-select budu_test.expect_error('partner upsert_activity', $$select public.budu_upsert_activity(null, 'x', 'earn', 1, 10, 'star', true, true)$$, 'forbidden');
+select budu_test.expect_error('partner upsert_activity', $$select public.budu_upsert_activity(null, 'x', 'earn', 1, 10, 'star', true, true, true)$$, 'forbidden');
 select budu_test.expect_error('partner upsert_reward',   $$select public.budu_upsert_reward(null, 'x', 1, true)$$, 'forbidden');
 select budu_test.expect_error('partner delete_reward',   format('select public.budu_delete_reward(%L)', current_setting('t.reward')), 'forbidden');
 select budu_test.expect_error('partner export_all',      'select public.budu_export_all()', 'forbidden');
@@ -258,6 +258,22 @@ select public.budu_sync_streak(current_setting('t.earn20')::uuid);
 select budu_test.check('ครบ 7 วันติดใหม่ได้โบนัสวันที่ 12', budu_test.bonus_days(current_setting('t.earn20')::uuid) = '12', budu_test.bonus_days(current_setting('t.earn20')::uuid));
 select budu_test.check('streak_bonus = 20 ได้ +20',
   (select bool_and(points = 20) from public.budu_entries where activity_id = current_setting('t.earn20')::uuid and kind = 'streak_bonus' and status = 'confirmed'));
+
+-- ---------------------------------------------------------------------
+-- กิจกรรมแบบหลายครั้งต่อวัน (once_per_day = false)
+-- ---------------------------------------------------------------------
+set role authenticated;
+select budu_test.act('a');
+select set_config('t.multi', (public.budu_upsert_activity(null, 'ล้างจาน', 'earn', 5, 10, 'broom', true, true, false)).id::text, false);
+select budu_test.expect_ok('หลายครั้งต่อวัน · admin ครั้งที่ 1', format('select public.budu_log_earn(%L)', current_setting('t.multi')));
+select budu_test.expect_ok('หลายครั้งต่อวัน · admin ครั้งที่ 2 วันเดียวกัน', format('select public.budu_log_earn(%L)', current_setting('t.multi')));
+select budu_test.act('b');
+select budu_test.expect_ok('หลายครั้งต่อวัน · partner ส่งซ้ำได้ (pending)', format('select public.budu_log_earn(%L)', current_setting('t.multi')));
+select budu_test.check('หลายครั้งต่อวัน · มี 3 รายการวันนี้',
+  (select count(*) = 3 from public.budu_entries where activity_id = current_setting('t.multi')::uuid and kind = 'earn'));
+select budu_test.act('a');
+select budu_test.expect_ok('แก้เป็นวันละครั้ง', format($$select public.budu_upsert_activity(%L, 'ล้างจาน', 'earn', 5, 10, 'broom', true, true, true)$$, current_setting('t.multi')));
+select budu_test.expect_error('วันละครั้ง · มีรายการวันนี้แล้วกดไม่ได้', format('select public.budu_log_earn(%L)', current_setting('t.multi')), 'already_logged');
 
 -- ---------------------------------------------------------------------
 -- rejoin (เครื่องใหม่ของแฟน)

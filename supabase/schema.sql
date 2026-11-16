@@ -35,10 +35,13 @@ create table if not exists public.budu_activities (
   streak_bonus int not null default 10 check (streak_bonus between 0 and 999),
   icon text not null default 'star' check (char_length(icon) between 1 and 30),
   streak_enabled boolean not null default true,
+  once_per_day boolean not null default true,    -- true = ให้แต้มได้วันละครั้ง · false = หลายครั้งต่อวัน (ใช้เฉพาะ earn)
   is_active boolean not null default true,
   sort_order int not null default 0,
   created_at timestamptz not null default now()
 );
+-- เพิ่มคอลัมน์ให้ตารางที่สร้างไว้ก่อนแล้ว (กิจกรรมเดิมเป็นวันละครั้ง)
+alter table public.budu_activities add column if not exists once_per_day boolean not null default true;
 create index if not exists budu_activities_couple on public.budu_activities (couple_id);
 
 create table if not exists public.budu_entries (
@@ -56,8 +59,8 @@ create table if not exists public.budu_entries (
   decided_at timestamptz
 );
 create index if not exists budu_entries_couple_date on public.budu_entries (couple_id, entry_date desc);
-create unique index if not exists budu_entries_one_earn_per_day on public.budu_entries (activity_id, entry_date)
-  where kind = 'earn' and status in ('pending','confirmed');
+-- โควตาวันละครั้งตรวจใน budu_log_earn แทนดัชนี (กิจกรรมแบบหลายครั้งต่อวันกดซ้ำได้)
+drop index if exists public.budu_entries_one_earn_per_day;
 create unique index if not exists budu_entries_one_bonus_per_day on public.budu_entries (activity_id, entry_date)
   where kind = 'streak_bonus' and status = 'confirmed';
 
@@ -243,20 +246,24 @@ language plpgsql security definer set search_path = public as $$
 declare m public.budu_members; a public.budu_activities; e public.budu_entries;
 begin
   m := public.budu_require();
+  -- ล็อกแถวกิจกรรม กันกดพร้อมกัน 2 เครื่องแล้วเกินโควตาวันละครั้ง
   select * into a from public.budu_activities
-    where id = p_activity_id and couple_id = m.couple_id and is_active and kind = 'earn';
+    where id = p_activity_id and couple_id = m.couple_id and is_active and kind = 'earn'
+    for update;
   if not found then raise exception 'activity_not_found'; end if;
-  begin
-    insert into public.budu_entries (couple_id, activity_id, activity_name, kind, points, status, created_by, decided_by, decided_at)
-    values (m.couple_id, a.id, a.name, 'earn', a.points,
-            case when m.role = 'admin' then 'confirmed' else 'pending' end,
-            m.id,
-            case when m.role = 'admin' then m.id end,
-            case when m.role = 'admin' then now() end)
-    returning * into e;
-  exception when unique_violation then
+  if a.once_per_day and exists (
+    select 1 from public.budu_entries
+     where activity_id = a.id and kind = 'earn' and status in ('pending','confirmed')
+       and entry_date = (now() at time zone 'Asia/Bangkok')::date) then
     raise exception 'already_logged';
-  end;
+  end if;
+  insert into public.budu_entries (couple_id, activity_id, activity_name, kind, points, status, created_by, decided_by, decided_at)
+  values (m.couple_id, a.id, a.name, 'earn', a.points,
+          case when m.role = 'admin' then 'confirmed' else 'pending' end,
+          m.id,
+          case when m.role = 'admin' then m.id end,
+          case when m.role = 'admin' then now() end)
+  returning * into e;
   if e.status = 'confirmed' then perform public.budu_sync_streak(a.id); end if;
   return e;
 end $$;
@@ -366,9 +373,11 @@ end $$;
 -- ---------------------------------------------------------------------
 -- จัดการกิจกรรม / รางวัล (ผู้ดูแล)
 -- ---------------------------------------------------------------------
+-- รุ่นเดิม 8 พารามิเตอร์ถูกแทนด้วยรุ่นที่มี p_once_per_day
+drop function if exists public.budu_upsert_activity(uuid, text, text, int, int, text, boolean, boolean);
 create or replace function public.budu_upsert_activity(
   p_id uuid, p_name text, p_kind text, p_points int, p_streak_bonus int,
-  p_icon text, p_streak_enabled boolean, p_is_active boolean
+  p_icon text, p_streak_enabled boolean, p_is_active boolean, p_once_per_day boolean
 ) returns public.budu_activities
 language plpgsql security definer set search_path = public as $$
 declare m public.budu_members; a public.budu_activities; nxt int;
@@ -376,16 +385,17 @@ begin
   m := public.budu_require('admin');
   if p_id is null then
     select coalesce(max(sort_order), 0) + 1 into nxt from public.budu_activities where couple_id = m.couple_id;
-    insert into public.budu_activities (couple_id, name, kind, points, streak_bonus, icon, streak_enabled, is_active, sort_order)
+    insert into public.budu_activities (couple_id, name, kind, points, streak_bonus, icon, streak_enabled, is_active, once_per_day, sort_order)
     values (m.couple_id, btrim(p_name), p_kind, p_points, coalesce(p_streak_bonus, 10),
-            coalesce(p_icon, 'star'), coalesce(p_streak_enabled, true), coalesce(p_is_active, true), nxt)
+            coalesce(p_icon, 'star'), coalesce(p_streak_enabled, true), coalesce(p_is_active, true),
+            coalesce(p_once_per_day, true), nxt)
     returning * into a;
   else
     -- kind แก้ไม่ได้หลังสร้าง (เมินค่าที่ส่งมา)
     update public.budu_activities
        set name = btrim(p_name), points = p_points, streak_bonus = coalesce(p_streak_bonus, streak_bonus),
            icon = coalesce(p_icon, icon), streak_enabled = coalesce(p_streak_enabled, streak_enabled),
-           is_active = coalesce(p_is_active, is_active)
+           is_active = coalesce(p_is_active, is_active), once_per_day = coalesce(p_once_per_day, once_per_day)
      where id = p_id and couple_id = m.couple_id
     returning * into a;
     if not found then raise exception 'activity_not_found'; end if;
@@ -478,7 +488,7 @@ revoke execute on function
   public.budu_log_earn(uuid), public.budu_log_deduct(uuid), public.budu_decide_entry(uuid, boolean), public.budu_cancel_entry(uuid),
   public.budu_redeem_reward(uuid), public.budu_request_coupon_use(uuid), public.budu_mark_coupon_used(uuid),
   public.budu_decline_coupon_request(uuid),
-  public.budu_upsert_activity(uuid, text, text, int, int, text, boolean, boolean),
+  public.budu_upsert_activity(uuid, text, text, int, int, text, boolean, boolean, boolean),
   public.budu_upsert_reward(uuid, text, int, boolean), public.budu_delete_reward(uuid), public.budu_export_all()
 from public, anon, authenticated;
 
@@ -490,7 +500,7 @@ grant execute on function
   public.budu_log_earn(uuid), public.budu_log_deduct(uuid), public.budu_decide_entry(uuid, boolean), public.budu_cancel_entry(uuid),
   public.budu_redeem_reward(uuid), public.budu_request_coupon_use(uuid), public.budu_mark_coupon_used(uuid),
   public.budu_decline_coupon_request(uuid),
-  public.budu_upsert_activity(uuid, text, text, int, int, text, boolean, boolean),
+  public.budu_upsert_activity(uuid, text, text, int, int, text, boolean, boolean, boolean),
   public.budu_upsert_reward(uuid, text, int, boolean), public.budu_delete_reward(uuid), public.budu_export_all()
 to authenticated;
 
