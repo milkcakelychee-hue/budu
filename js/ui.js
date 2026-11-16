@@ -100,6 +100,9 @@ export const emptyCard = (icon, text, extra = '') =>
 // เวลาแบบ "ศ. 13 พ.ย. 00:30" (เวลาไทย)
 const TIME_FMT = new Intl.DateTimeFormat('th-TH', { timeZone: 'Asia/Bangkok', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
 export const fmtTime = iso => TIME_FMT.format(new Date(iso));
+// วันที่แบบ "15 พ.ย. 2569"
+const DATE_FMT = new Intl.DateTimeFormat('th-TH', { timeZone: 'Asia/Bangkok', day: 'numeric', month: 'short', year: 'numeric' });
+export const fmtDate = iso => DATE_FMT.format(new Date(iso));
 
 // ปุ่มที่เขียนข้อมูล: ปิดทันที (กันกดรัว) → รอผล → toast หรือแจ้งผิดพลาด
 export async function act(btn, fn, okText) {

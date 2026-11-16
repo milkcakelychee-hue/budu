@@ -20,7 +20,7 @@ const ROUTES = {
   today: { view: today, tab: 'today', nav: true },
   deduct: { view: deduct, tab: 'deduct', nav: true },
   rewards: { view: rewards, tab: 'rewards', nav: true },
-  coupon: { view: coupon, tab: 'rewards', nav: true },
+  coupon: { view: coupon, tab: 'rewards', nav: false },
   stats: { view: stats, tab: 'stats', nav: true },
   history: { view: history, tab: 'stats', nav: true },
   settings: { view: settings, tab: 'settings', nav: true },
@@ -66,7 +66,7 @@ function route() {
   const r = ROUTES[name];
   navEl.hidden = !r.nav;
   if (r.nav) renderNav(r.tab);
-  document.querySelectorAll('.sheet-wrap').forEach(w => w.remove());
+  document.querySelectorAll('.sheet-wrap, .print-overlay').forEach(w => w.remove());
   document.body.classList.remove('sheet-open');
   appEl.innerHTML = '';
   r.view.render(appEl, params);
