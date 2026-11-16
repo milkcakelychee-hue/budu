@@ -49,8 +49,7 @@ function balanceCard() {
   </div>`;
 }
 
-// ---------- กิจวัตร: แถวกะทัดรัด แตะแถวเพื่อกางดูวงติ๊ก 7 ดวงและโบนัส ----------
-const expanded = new Set(); // id กิจกรรมที่กางอยู่ (จำไว้ระหว่างวาดใหม่)
+// ---------- กิจวัตร: ป้ายละ 1 กิจกรรม แสดงวงติ๊ก 7 ดวงและโบนัสเสมอ ----------
 
 function routineRow(a, today) {
   const entries = store.state.data.entries;
@@ -63,7 +62,6 @@ function routineRow(a, today) {
   // รอบที่ครบ 7 แล้วเมื่อวาน → วันนี้เริ่มรอบใหม่
   const filled = !doneToday && streak > 0 && streak % RULES.STREAK_LENGTH === 0 ? 0 : dotsFilled(streak);
   const streakOn = a.streak_enabled;
-  const open = expanded.has(a.id);
 
   let right;
   if (todayEntry?.status === 'confirmed') {
@@ -82,16 +80,17 @@ function routineRow(a, today) {
     return '<span class="dot"></span>';
   }).join('');
 
-  return `<div class="routine-row${todayEntry ? ' used' : ''}${open ? ' open' : ''}">
-    <div class="rr-main" ${streakOn ? `data-toggle="${a.id}" role="button" tabindex="0" aria-expanded="${open}"` : ''}>
+  return `<div class="routine-row${todayEntry ? ' used' : ''}">
+    <div class="rr-main">
       ${iconTile(a.icon, 40)}
       <div class="rr-text">
         <div class="rr-name">${esc(a.name)}</div>
-        ${streakOn ? `<div class="rr-sub">${esc(t('streakDays', { n: streak }))} · ${esc(t('dotsCount', { n: filled }))}</div>` : ''}
+        ${streakOn ? `<div class="rr-sub">${esc(t('streakDays', { n: streak }))} · ${esc(t('dotsCount', { n: filled }))}</div>`
+          : !once ? `<div class="rr-sub">${esc(S.manyADayHint)}</div>` : ''}
       </div>
       ${right}
     </div>
-    ${streakOn && open ? `<div class="rr-more">
+    ${streakOn ? `<div class="rr-more">
       <div class="rc-dots"><div class="dots">${dots}</div><div class="rc-count">${esc(t('dotsCount', { n: filled }))}</div></div>
       ${filled === RULES.STREAK_LENGTH
         // วันที่ครบรอบ: ขึ้น "ครบรอบ +{b}" สีชมพู แทน "อีก 7 วันรับโบนัส" (ผู้ใช้กำหนด 16 พ.ย. 2569)
@@ -144,10 +143,14 @@ function draw() {
   const admin = store.isAdmin();
   const acts = store.state.data.activities
     .filter(a => a.kind === 'earn' && a.is_active)
-    .sort((a, b) => a.sort_order - b.sort_order);
+    .sort((a, b) => b.points - a.points || a.sort_order - b.sort_order); // แต้มต่อครั้งมาก→น้อย (เท่ากันเรียงตามที่เพิ่ม)
+  // วันละครั้งที่กดแล้ววันนี้ (ทำแล้ว/รอยืนยัน) ย้ายไปล่างสุด
+  const usedToday = a => a.once_per_day !== false && store.state.data.entries.some(e => e.activity_id === a.id && e.kind === 'earn'
+    && e.entry_date === today && (e.status === 'pending' || e.status === 'confirmed'));
+  acts.sort((a, b) => usedToday(a) - usedToday(b));
 
   const routines = acts.length
-    ? `<div class="routine-rows">${acts.map(a => routineRow(a, today)).join('<div class="list-sep"></div>')}</div>`
+    ? `<div class="routine-rows">${acts.map(a => routineRow(a, today)).join('')}</div>`
     : `<div class="today-empty"><div class="corner-glow"></div>
         <span class="empty-ico tile">${svgIcon(admin ? UI_ICONS.plus : UI_ICONS.list, { size: 26 })}</span>
         <div class="empty-text">${esc(admin ? S.todayEmptyAdmin : S.todayEmptyPartner)}</div>
@@ -166,11 +169,6 @@ function draw() {
     ${routines}
   </section>`;
 
-  root.querySelectorAll('[data-toggle]').forEach(r => {
-    const flip = () => { const id = r.dataset.toggle; expanded.has(id) ? expanded.delete(id) : expanded.add(id); draw(); };
-    r.onclick = e => { if (!e.target.closest('[data-earn]')) flip(); };
-    r.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); } };
-  });
   root.querySelectorAll('[data-earn]').forEach(b => b.onclick = () => {
     const a = acts.find(x => x.id === b.dataset.earn);
     act(b, async () => { await api.logEarn(a.id); await store.refresh('entries'); },

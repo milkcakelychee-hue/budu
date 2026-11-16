@@ -184,6 +184,7 @@ export const S = {
   frequencyLabel: 'ให้แต้มได้',
   onceADay: 'วันละครั้ง',
   manyADay: 'หลายครั้งต่อวัน',
+  manyADayHint: 'ทำได้วันละหลายครั้ง', // ใต้ชื่อกิจวัตรที่ไม่นับ streak และกดได้หลายครั้ง
   streakToggle: 'นับ streak',
   hideActivity: 'ซ่อนกิจกรรมนี้',
   save: 'บันทึก',
