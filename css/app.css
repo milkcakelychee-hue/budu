@@ -205,6 +205,8 @@ body.sheet-open { overflow: hidden; }
 .step-input { width: 100%; min-width: 0; max-width: 4.5ch; border: 0; background: transparent; color: inherit; font: inherit; text-align: center; padding: 0; outline: none; border-bottom: 1.5px dashed transparent; }
 .step-input:focus { border-bottom-color: currentColor; }
 .sheet-top { display: flex; margin-bottom: -4px; }
+.sheet > *, .sheet form > * { flex-shrink: 0; }
+.rw-tools { display: flex; justify-content: flex-end; padding: 16px 20px 0; }
 .sheet .field, .sheet .row2 { min-width: 0; }
 .icon-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 7px; }
 .icon-grid button { height: 44px; border-radius: 13px; border: 1px solid #E6E6E3; background: var(--sheet-bg); display: flex; align-items: center; justify-content: center; cursor: pointer; }
@@ -298,6 +300,8 @@ body.sheet-open { overflow: hidden; }
 .sec-title { font-family: var(--font-head); font-weight: 400; font-size: 26px; line-height: 1.35; margin: 0; padding: 26px 24px 10px; }
 .sec-title.inline { padding: 0; }
 .sec-title.sm { font-size: 22px; padding: 24px 24px 12px; }
+.sec-head.sm { padding: 24px 24px 12px; }
+.sec-title.inline.sm { padding: 0; }
 .sec-link { font-size: 14px; font-weight: 600; color: var(--text); }
 .routine-list { display: flex; flex-direction: column; gap: 14px; padding: 0 20px; }
 .routine-card { position: relative; overflow: hidden; background: var(--card); border-radius: var(--r-card); box-shadow: var(--card-shadow); }

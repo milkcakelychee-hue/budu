@@ -182,7 +182,6 @@ export const S = {
   rewardAdd: 'เพิ่มรางวัล',
   rewardEdit: 'แก้รางวัล',
   rewardName: 'ชื่อรางวัล',
-  rewardNamePh: 'เช่น Sushiro ฟรี 1 มื้อ',
   rewardCost: 'แต้มที่ใช้แลก',
   hideReward: 'ซ่อนรางวัลนี้',
   deleteReward: 'ลบรางวัลนี้',

@@ -96,7 +96,7 @@ function viewCode() {
   return `${backBtn()}${title(rejoin ? S.rejoinTitle : S.joinTitle)}
     <div class="ob-input"><input id="code" class="code-input${ui.error ? ' bad' : ''}" type="text" inputmode="text"
       autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="9"
-      placeholder="XXXX-XXXX" aria-label="${esc(S.pairCode)}" value="${esc(ui.code)}"></div>
+      aria-label="${esc(S.pairCode)}" value="${esc(ui.code)}"></div>
     ${errorLine()}
     <div class="ob-actions"><button type="button" class="btn btn-primary" data-act="submit" ${ui.busy || !store.state.online ? 'disabled' : ''}>${esc(rejoin ? S.rejoinButton : S.joinButton)}</button></div>`;
 }

@@ -51,9 +51,10 @@ function draw() {
 function openForm(rw) {
   const isNew = !rw;
   const { el, close } = openSheet(`<form style="display:contents" novalidate>
+    <div class="sheet-top"><button type="button" class="round-btn" data-close aria-label="${S.a11yBack}">${svgIcon(UI_ICONS.back, { size: 20 })}</button></div>
     <h2 class="sheet-title">${esc(isNew ? S.rewardAdd : S.rewardEdit)}</h2>
-    ${field(S.rewardName, `<input class="text-input" name="name" maxlength="60" autocomplete="off" placeholder="${esc(S.rewardNamePh)}" value="${esc(rw?.name ?? '')}">`)}
-    ${field(S.rewardCost, `<input class="text-input" name="cost" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="5" placeholder="0" value="${rw?.cost ?? ''}">`)}
+    ${field(S.rewardName, `<input class="text-input" name="name" maxlength="60" autocomplete="off" value="${esc(rw?.name ?? '')}">`)}
+    ${field(S.rewardCost, `<input class="text-input" name="cost" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="5" value="${rw?.cost ?? ''}">`)}
     ${switchRow(S.hideReward, 'hidden', rw ? !rw.is_active : false)}
     <div class="form-err"></div>
     <button type="submit" class="btn btn-primary" ${store.canWrite() ? '' : 'disabled'}>${esc(S.save)}</button>
@@ -61,6 +62,7 @@ function openForm(rw) {
   </form>`);
 
   const form = el.querySelector('form');
+  el.querySelector('[data-close]').onclick = close;
   const errBox = el.querySelector('.form-err');
   const showErr = msg => { errBox.innerHTML = `<div class="err-line">${esc(msg)}</div>`; };
   form.elements.cost.addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, ''); });

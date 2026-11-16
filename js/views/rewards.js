@@ -1,7 +1,7 @@
 // รางวัล: สลับ รางวัล / คูปอง · แฟนแลกรางวัล (ยืนยัน → ตัดแต้ม → เอฟเฟกต์พิมพ์ตั๋ว) · ผู้ดูแลดูอย่างเดียว
 import { S, t, thaiDate } from '../strings.js';
 import { esc, openSheet, noticeSheet, toast, fmtDate } from '../ui.js';
-import { svgIcon, ACTIVITY_ICONS } from '../icons.js';
+import { svgIcon, ACTIVITY_ICONS, UI_ICONS } from '../icons.js';
 import { RULES } from '../config.js';
 import * as api from '../api.js';
 import * as store from '../store.js';
@@ -92,6 +92,8 @@ function draw() {
       <button type="button" data-tab="rewards" class="${tab === 'rewards' ? 'on' : ''}">${esc(S.rewardsTitle)}</button>
       <button type="button" data-tab="coupons" class="${tab === 'coupons' ? 'on' : ''}">${esc(S.couponsTab)}</button>
     </div>
+    ${tab === 'rewards' && rewards.length && store.can.manage
+      ? `<div class="rw-tools"><a class="btn-pill sm" href="#/manage-rewards/new">${svgIcon(UI_ICONS.plus, { size: 16, stroke: 'currentColor', width: 2 })}${esc(S.rewardAdd)}</a></div>` : ''}
     ${list}
   </section>`;
 

@@ -66,7 +66,9 @@ function draw() {
       <div class="sum-num">−${sum(weekList)}</div>
       <div class="sum-meta">${esc(t('deductWeekMeta', { n: weekList.length, m: sum(lastList) }))}</div>
     </div>
-    ${acts.length ? `<h2 class="sec-title sm">${esc(S.deductItems)}</h2><div class="deduct-grid">${tiles}</div>` : ''}
+    ${acts.length || admin ? `<div class="sec-head sm"><h2 class="sec-title inline sm">${esc(S.deductItems)}</h2>
+      ${admin ? `<a class="btn-pill sm" href="#/manage-activities/new-deduct">${svgIcon(UI_ICONS.plus, { size: 16, stroke: 'currentColor', width: 2 })}${esc(S.activityAdd)}</a>` : ''}</div>` : ''}
+    ${acts.length ? `<div class="deduct-grid">${tiles}</div>` : ''}
     ${deducts.length ? `<h2 class="sec-title sm">${esc(S.deductHistory)}</h2><div class="hist-card">${hist}</div>` : ''}
   </section>`;
 
