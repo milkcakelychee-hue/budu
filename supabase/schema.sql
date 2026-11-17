@@ -447,6 +447,16 @@ begin
   return r;
 end $$;
 
+-- ลบกิจกรรม (17 พ.ย. 2569): รายการแต้มเดิมคงอยู่ (activity_id เป็น null ผ่าน on delete set null · ชื่อยังอยู่ใน activity_name)
+create or replace function public.budu_delete_activity(p_id uuid) returns void
+language plpgsql security definer set search_path = public as $$
+declare m public.budu_members;
+begin
+  m := public.budu_require('admin');
+  delete from public.budu_activities where id = p_id and couple_id = m.couple_id;
+  if not found then raise exception 'activity_not_found'; end if;
+end $$;
+
 create or replace function public.budu_delete_reward(p_id uuid) returns void
 language plpgsql security definer set search_path = public as $$
 declare m public.budu_members;
@@ -525,7 +535,7 @@ revoke execute on function
   public.budu_redeem_reward(uuid), public.budu_request_coupon_use(uuid), public.budu_mark_coupon_used(uuid),
   public.budu_decline_coupon_request(uuid),
   public.budu_upsert_activity(uuid, text, text, int, int, text, boolean, boolean, boolean, text),
-  public.budu_upsert_reward(uuid, text, int, boolean, text), public.budu_points_summary(), public.budu_delete_reward(uuid), public.budu_export_all()
+  public.budu_upsert_reward(uuid, text, int, boolean, text), public.budu_points_summary(), public.budu_delete_reward(uuid), public.budu_delete_activity(uuid), public.budu_export_all()
 from public, anon, authenticated;
 
 -- ใช้ใน RLS จึงต้องให้ authenticated เรียกได้
@@ -537,7 +547,7 @@ grant execute on function
   public.budu_redeem_reward(uuid), public.budu_request_coupon_use(uuid), public.budu_mark_coupon_used(uuid),
   public.budu_decline_coupon_request(uuid),
   public.budu_upsert_activity(uuid, text, text, int, int, text, boolean, boolean, boolean, text),
-  public.budu_upsert_reward(uuid, text, int, boolean, text), public.budu_points_summary(), public.budu_delete_reward(uuid), public.budu_export_all()
+  public.budu_upsert_reward(uuid, text, int, boolean, text), public.budu_points_summary(), public.budu_delete_reward(uuid), public.budu_delete_activity(uuid), public.budu_export_all()
 to authenticated;
 
 -- ---------------------------------------------------------------------

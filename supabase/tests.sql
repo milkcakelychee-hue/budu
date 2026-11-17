@@ -327,6 +327,16 @@ select budu_test.expect_ok('น้องตาลแลกรางวัลด�
 select budu_test.check('คูปองเป็นของน้องตาล', exists (select 1 from public.budu_coupons where reward_id = current_setting('t.krew')::uuid and owner = 'kid'));
 select budu_test.check('แต้มน้องตาลเหลือ 2', (public.budu_points_summary() ->> 'kid')::int = 2, public.budu_points_summary()::text);
 
+-- ลบกิจกรรม: แต้มเดิมคงอยู่
+set role authenticated;
+select budu_test.act('f');
+select budu_test.expect_error('น้องตาลลบกิจกรรมไม่ได้', format('select public.budu_delete_activity(%L)', current_setting('t.kact')), 'forbidden');
+select budu_test.act('a');
+select budu_test.expect_ok('ปรายฟ้าลบกิจกรรม', format('select public.budu_delete_activity(%L)', current_setting('t.kact')));
+select budu_test.check('กิจกรรมหายไป', not exists (select 1 from public.budu_activities where id = current_setting('t.kact')::uuid));
+select budu_test.check('แต้มน้องตาลยังเท่าเดิม (2)', (public.budu_points_summary() ->> 'kid')::int = 2, public.budu_points_summary()::text);
+select budu_test.check('รายการเดิมยังอยู่พร้อมชื่อ', exists (select 1 from public.budu_entries where activity_id is null and activity_name = 'เก็บของเล่น'));
+
 -- ---------------------------------------------------------------------
 -- rejoin (เครื่องใหม่ของแฟน)
 -- ---------------------------------------------------------------------

@@ -91,6 +91,7 @@ export const upsertActivity = a => rpc('upsert_activity', {
 });
 export const upsertReward = r => rpc('upsert_reward', { p_id: r.id ?? null, p_name: r.name, p_cost: r.cost, p_is_active: r.is_active, p_owner: r.owner });
 export const deleteReward = id => rpc('delete_reward', { p_id: id });
+export const deleteActivity = id => rpc('delete_activity', { p_id: id });
 export const exportAll = () => rpc('export_all');
 export const pointsSummary = () => rpc('points_summary');
 
@@ -108,6 +109,7 @@ export function subscribe(coupleId, onChange) {
   // Realtime กรอง DELETE ด้วยคอลัมน์ไม่ได้ (แถวที่ลบไม่มีข้อมูลให้เทียบ) → ฟังการลบรางวัลแบบไม่กรอง แล้วโหลดใหม่
   // payload มีแค่ id ของแถวที่ลบ ไม่มีข้อมูลอื่นของคู่ใด
   channel.on('postgres_changes', { event: 'DELETE', schema: 'public', table: T('rewards') }, () => onChange('rewards'));
+  channel.on('postgres_changes', { event: 'DELETE', schema: 'public', table: T('activities') }, () => onChange('activities'));
   channel.subscribe();
   return channel;
 }

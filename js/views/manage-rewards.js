@@ -1,6 +1,6 @@
 // จัดการรางวัล (เฉพาะผู้ดูแล): ตั๋วรางวัลเรียงแต้มมากไปน้อย · แผ่นล่างเพิ่ม/แก้/ซ่อน/ลบ
 import { S, t } from '../strings.js';
-import { esc, subHead, hiddenBadge, chevron, emptyCard, openSheet, confirmSheet, noticeSheet, field, switchRow, ownerSwitch } from '../ui.js';
+import { esc, subHead, hiddenBadge, chevron, emptyCard, openSheet, confirmSheet, noticeSheet, field, switchRow, ownerSwitch, ownerPicker } from '../ui.js';
 import { svgIcon, UI_ICONS } from '../icons.js';
 import * as api from '../api.js';
 import * as store from '../store.js';
@@ -51,10 +51,12 @@ function draw() {
 
 function openForm(rw) {
   const isNew = !rw;
+  const picker = ownerPicker(rw?.owner);
   const { el, close } = openSheet(`<form style="display:contents" novalidate>
     <div class="sheet-top"><button type="button" class="round-btn" data-close aria-label="${S.a11yBack}">${svgIcon(UI_ICONS.back, { size: 20 })}</button></div>
     <h2 class="sheet-title">${esc(isNew ? S.rewardAdd : S.rewardEdit)}</h2>
     ${field(S.rewardName, `<input class="text-input" name="name" maxlength="60" autocomplete="off" value="${esc(rw?.name ?? '')}">`)}
+    ${picker.html}
     ${field(S.rewardCost, `<input class="text-input" name="cost" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="5" value="${rw?.cost ?? ''}">`)}
     ${switchRow(S.hideReward, 'hidden', rw ? !rw.is_active : false)}
     <div class="form-err"></div>
@@ -66,6 +68,7 @@ function openForm(rw) {
   el.querySelector('[data-close]').onclick = close;
   const errBox = el.querySelector('.form-err');
   const showErr = msg => { errBox.innerHTML = `<div class="err-line">${esc(msg)}</div>`; };
+  picker.bind(el);
   form.elements.cost.addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, ''); });
 
   form.onsubmit = async e => {
@@ -77,7 +80,9 @@ function openForm(rw) {
     const btn = form.querySelector('[type=submit]');
     btn.disabled = true; errBox.innerHTML = '';
     try {
-      await api.upsertReward({ id: rw?.id ?? null, name, cost, is_active: !form.elements.hidden.checked, owner: rw?.owner ?? store.owner() });
+      const base = { name, cost, is_active: !form.elements.hidden.checked };
+      if (!isNew) await api.upsertReward({ ...base, id: rw.id, owner: rw.owner });
+      for (const o of picker.owners) if (o !== rw?.owner) await api.upsertReward({ ...base, id: null, owner: o });
       close();
       store.refresh('rewards');
     } catch (err) {

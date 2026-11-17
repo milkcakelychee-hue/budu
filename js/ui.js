@@ -167,3 +167,26 @@ export function ownerSwitch() {
     }).join('')}
   </div>`;
 }
+
+// ช่อง "ใช้กับ" ในฟอร์มกิจกรรม/รางวัล (17 พ.ย. 2569)
+// ใหม่: เลือกได้ทั้งคู่ (อย่างน้อย 1) · ค่าเริ่มต้น = คนที่กำลังดู
+// แก้ของเดิม: เจ้าของเดิมล็อกไว้ เลือกอีกคนเพิ่ม = สร้างสำเนาให้อีกคน
+export function ownerPicker(locked) {
+  const owners = new Set([locked ?? store.owner()]);
+  const html = field(S.ownersLabel, `<div class="owner-checks">${['partner', 'kid'].map(r =>
+    `<button type="button" data-for="${r}" ${r === locked ? 'disabled' : ''}>${esc(ownerName(r))}</button>`).join('')}</div>`);
+  const bind = el => {
+    const draw = () => el.querySelectorAll('[data-for]').forEach(b => {
+      const on = owners.has(b.dataset.for);
+      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+    });
+    el.querySelectorAll('[data-for]').forEach(b => b.onclick = () => {
+      const r = b.dataset.for;
+      if (r === locked) return;
+      if (owners.has(r)) { if (owners.size > 1) owners.delete(r); } else owners.add(r);
+      draw();
+    });
+    draw();
+  };
+  return { html, bind, owners };
+}

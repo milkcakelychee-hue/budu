@@ -531,14 +531,16 @@ body.sheet-open { overflow: hidden; }
 .legend { display: flex; gap: 12px; font-size: 12px; color: var(--text-3); }
 .legend > span { display: flex; align-items: center; gap: 5px; }
 .legend .key { width: 9px; height: 9px; }
-.chart { display: flex; gap: 2px; margin-top: 14px; }
-.wk { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.wk-bars { height: 130px; display: flex; align-items: flex-end; gap: 3px; }
-.wk-bars span { width: 10px; border-radius: 5px; }
+.chart { display: flex; gap: 10px; margin-top: 14px; }
+.wk { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
+.wk-bars { height: 100px; display: flex; align-items: flex-end; gap: 2px; }
+.bar-col { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; }
+.bar-v { font-family: var(--font-mono); font-size: 10px; line-height: 1; text-align: center; color: var(--text-2); margin-bottom: 3px; white-space: nowrap; overflow: visible; }
+.bar-e, .bar-d { display: block; border-radius: 0; }
 .bar-e { background: var(--pink); }
 .bar-d { background: var(--bar-deduct); }
-.wk-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: .3px; color: var(--text-2); }
-.wk.now .wk-label { color: var(--text); font-weight: 600; }
+.wk-label { text-align: center;  font-family: var(--font-mono); font-size: 10px; letter-spacing: .3px; color: var(--text-2); }
+.wk.now .wk-label { text-align: center;  color: var(--text); font-weight: 600; }
 .streak-list { display: flex; flex-direction: column; gap: 12px; padding: 0 20px; }
 .streak-card { position: relative; overflow: hidden; background: var(--card); border-radius: 24px; padding: 16px 18px; border: 1.5px solid transparent; }
 .streak-card.complete { border-color: #F2B5C8; }
@@ -641,3 +643,9 @@ button.hrow { cursor: pointer; }
 .owner-checks button { flex: 1; height: 44px; border-radius: 999px; border: 1.5px solid var(--card-foot); background: transparent; color: var(--text-2); font-size: 15px; cursor: pointer; }
 .owner-checks button.on { border-color: var(--pink); background: rgba(217,86,127,.1); color: var(--text); font-weight: 600; }
 .stepper.off { opacity: .45; }
+.period-seg { margin-bottom: 0; }
+.chart.dense { gap: 3px; }
+.chart.dense .wk-bars { gap: 1px; }
+.chart.dense .bar-v { font-size: 7px; letter-spacing: -.3px; }
+.chart.dense .wk-label { text-align: center;  font-size: 9px; letter-spacing: 0; }
+.owner-checks button:disabled { cursor: default; opacity: 1; }

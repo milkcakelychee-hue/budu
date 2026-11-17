@@ -1,10 +1,12 @@
 // จัดการกิจกรรม (เฉพาะผู้ดูแล): รายการแยก ให้แต้ม / หักแต้ม · แผ่นล่างเพิ่ม/แก้/ซ่อน
 import { S, t } from '../strings.js';
 import { RULES } from '../config.js';
-import { esc, subHead, iconTile, hiddenBadge, chevron, emptyCard, openSheet, field, stepper, bindSteppers, switchRow, ownerSwitch, ownerName } from '../ui.js';
+import { esc, subHead, iconTile, hiddenBadge, chevron, emptyCard, openSheet, field, stepper, bindSteppers, switchRow, ownerSwitch, ownerPicker, confirmSheet, noticeSheet } from '../ui.js';
 import { svgIcon, UI_ICONS, ACTIVITY_ICONS } from '../icons.js';
 import * as api from '../api.js';
 import * as store from '../store.js';
+
+const ICON_TRASH = 'M4 7h16 M10 11v6 M14 11v6 M6 7l1 13h10l1-13 M9 7V4h6v3';
 
 let root = null;
 let unsub = null;
@@ -69,8 +71,7 @@ function openForm(act, kindForNew = 'earn') {
   let icon = v.icon;
   // ค่าโบนัสที่จำไว้ตอนปิด streak (เปิดกลับมาใช้ค่าเดิม) · 0 = ใช้ค่าเริ่มต้น
   let savedBonus = v.streak_bonus || RULES.STREAK_BONUS_DEFAULT;
-  // ตอนเพิ่มใหม่เลือกได้ว่าใช้กับใคร (เลือกทั้งคู่ = สร้างให้ทั้งสองคน) · ค่าเริ่มต้น = คนที่กำลังดู
-  const owners = new Set([store.owner()]);
+  const picker = ownerPicker(act?.owner);
 
   const { el, close } = openSheet(`<form class="sheet-form" style="display:contents" novalidate>
     <div class="sheet-top"><button type="button" class="round-btn" data-close aria-label="${S.a11yBack}">${svgIcon(UI_ICONS.back, { size: 20 })}</button></div>
@@ -79,8 +80,7 @@ function openForm(act, kindForNew = 'earn') {
     ${field(S.kindLabel, isNew
       ? `<div class="seg"><button type="button" data-kind="earn">${esc(S.kindEarnOpt)}</button><button type="button" data-kind="deduct">${esc(S.kindDeductOpt)}</button></div>`
       : `<span class="kind-badge">${esc(kind === 'earn' ? S.kindEarnOpt : S.kindDeductOpt)}</span>`)}
-    ${isNew ? field(S.ownersLabel, `<div class="owner-checks">${['partner', 'kid'].map(r =>
-      `<button type="button" data-for="${r}">${esc(ownerName(r))}</button>`).join('')}</div>`) : ''}
+    ${picker.html}
     <div class="kind-fields"></div>
     ${field(S.icon, `<div class="icon-grid">${Object.entries(ACTIVITY_ICONS).map(([k, d]) =>
       `<button type="button" data-icon="${k}" aria-label="${k}">${svgIcon(d, { size: 22 })}</button>`).join('')}</div>`)}
@@ -88,6 +88,7 @@ function openForm(act, kindForNew = 'earn') {
     ${switchRow(S.hideActivity, 'hidden', !v.is_active)}
     <div class="form-err"></div>
     <button type="submit" class="btn btn-primary" ${store.canWrite() ? '' : 'disabled'}>${esc(S.save)}</button>
+    ${isNew ? '' : `<button type="button" class="btn btn-outline-danger" data-delete ${store.canWrite() ? '' : 'disabled'}>${svgIcon(ICON_TRASH, { size: 18, width: 1.8 })}${esc(S.deleteActivity)}</button>`}
   </form>`);
 
   const form = el.querySelector('form');
@@ -125,16 +126,7 @@ function openForm(act, kindForNew = 'earn') {
 
   el.querySelectorAll('[data-kind]').forEach(b => b.onclick = () => { kind = b.dataset.kind; drawKind(); });
   el.querySelectorAll('[data-icon]').forEach(b => b.onclick = () => { icon = b.dataset.icon; drawIcon(); });
-  const drawOwners = () => el.querySelectorAll('[data-for]').forEach(b => {
-    const on = owners.has(b.dataset.for);
-    b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
-  });
-  el.querySelectorAll('[data-for]').forEach(b => b.onclick = () => {
-    const r = b.dataset.for;
-    if (owners.has(r)) { if (owners.size > 1) owners.delete(r); } else owners.add(r); // ต้องเหลืออย่างน้อย 1 คน
-    drawOwners();
-  });
-  drawKind(); drawIcon(); drawOwners();
+  drawKind(); drawIcon(); picker.bind(el);
 
   form.onsubmit = async e => {
     e.preventDefault();
@@ -155,8 +147,8 @@ function openForm(act, kindForNew = 'earn') {
         is_active: !form.elements.hidden.checked,
         once_per_day: kind === 'earn' ? once : true,
       };
-      if (isNew) { for (const o of owners) await api.upsertActivity({ ...base, owner: o }); }
-      else await api.upsertActivity({ ...base, owner: act.owner });
+      if (!isNew) await api.upsertActivity({ ...base, owner: act.owner });
+      for (const o of picker.owners) if (o !== act?.owner) await api.upsertActivity({ ...base, id: null, owner: o });
       close();
       store.refresh('activities');
     } catch (err) {
@@ -164,4 +156,22 @@ function openForm(act, kindForNew = 'earn') {
       btn.disabled = !store.canWrite();
     }
   };
+
+  // ลบกิจกรรม: แต้มที่ได้ไปแล้วและประวัติคงอยู่ (ผู้ใช้กำหนด 17 พ.ย. 2569)
+  el.querySelector('[data-delete]')?.addEventListener('click', async () => {
+    close();
+    const ok = await confirmSheet({
+      title: S.deleteActivityTitle,
+      body: t('deleteActivityBody', { name: act.name }),
+      ok: S.deleteActivityButton,
+      danger: true,
+    });
+    if (!ok) return;
+    try {
+      await api.deleteActivity(act.id);
+      store.refresh('activities');
+    } catch (err) {
+      noticeSheet(err.message || S.genericError);
+    }
+  });
 }

@@ -125,7 +125,11 @@ export const S = {
 
   // สถิติ
   statsTitle: 'สถิติ',
-  statsWeekly: 'แต้มรายสัปดาห์',
+  statsChart: 'แต้มตามช่วงเวลา',
+  period_week: '7 วัน',
+  period_month: 'เดือนนี้',
+  period_year: 'ปีนี้',
+  monthsShort: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'],
   statsEarned: 'ได้',
   statsDeducted: 'ถูกหัก',
   statsStreaks: 'streak ของแต่ละกิจกรรม',
@@ -210,6 +214,10 @@ export const S = {
   rewardName: 'ชื่อรางวัล',
   rewardCost: 'แต้มที่ใช้แลก',
   hideReward: 'ซ่อนรางวัลนี้',
+  deleteActivity: 'ลบกิจกรรมนี้',
+  deleteActivityTitle: 'ลบกิจกรรมนี้?',
+  deleteActivityBody: '{name} จะหายจากรายการ แต้มที่ได้ไปแล้วและประวัติยังอยู่',
+  deleteActivityButton: 'ลบกิจกรรม',
   deleteReward: 'ลบรางวัลนี้',
   deleteRewardTitle: 'ลบรางวัลนี้?',
   deleteRewardBody: '{reward} จะหายจากรายการรางวัล คูปองที่แลกไปแล้วยังอยู่',
