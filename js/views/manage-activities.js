@@ -1,7 +1,7 @@
 // จัดการกิจกรรม (เฉพาะผู้ดูแล): รายการแยก ให้แต้ม / หักแต้ม · แผ่นล่างเพิ่ม/แก้/ซ่อน
 import { S, t } from '../strings.js';
 import { RULES } from '../config.js';
-import { esc, subHead, iconTile, hiddenBadge, chevron, emptyCard, openSheet, field, stepper, bindSteppers, switchRow, ownerSwitch } from '../ui.js';
+import { esc, subHead, iconTile, hiddenBadge, chevron, emptyCard, openSheet, field, stepper, bindSteppers, switchRow, ownerSwitch, ownerName } from '../ui.js';
 import { svgIcon, UI_ICONS, ACTIVITY_ICONS } from '../icons.js';
 import * as api from '../api.js';
 import * as store from '../store.js';
@@ -67,6 +67,10 @@ function openForm(act, kindForNew = 'earn') {
   let kind = v.kind;
   let once = v.once_per_day ?? true;
   let icon = v.icon;
+  // ค่าโบนัสที่จำไว้ตอนปิด streak (เปิดกลับมาใช้ค่าเดิม) · 0 = ใช้ค่าเริ่มต้น
+  let savedBonus = v.streak_bonus || RULES.STREAK_BONUS_DEFAULT;
+  // ตอนเพิ่มใหม่เลือกได้ว่าใช้กับใคร (เลือกทั้งคู่ = สร้างให้ทั้งสองคน) · ค่าเริ่มต้น = คนที่กำลังดู
+  const owners = new Set([store.owner()]);
 
   const { el, close } = openSheet(`<form class="sheet-form" style="display:contents" novalidate>
     <div class="sheet-top"><button type="button" class="round-btn" data-close aria-label="${S.a11yBack}">${svgIcon(UI_ICONS.back, { size: 20 })}</button></div>
@@ -75,6 +79,8 @@ function openForm(act, kindForNew = 'earn') {
     ${field(S.kindLabel, isNew
       ? `<div class="seg"><button type="button" data-kind="earn">${esc(S.kindEarnOpt)}</button><button type="button" data-kind="deduct">${esc(S.kindDeductOpt)}</button></div>`
       : `<span class="kind-badge">${esc(kind === 'earn' ? S.kindEarnOpt : S.kindDeductOpt)}</span>`)}
+    ${isNew ? field(S.ownersLabel, `<div class="owner-checks">${['partner', 'kid'].map(r =>
+      `<button type="button" data-for="${r}">${esc(ownerName(r))}</button>`).join('')}</div>`) : ''}
     <div class="kind-fields"></div>
     ${field(S.icon, `<div class="icon-grid">${Object.entries(ACTIVITY_ICONS).map(([k, d]) =>
       `<button type="button" data-icon="${k}" aria-label="${k}">${svgIcon(d, { size: 22 })}</button>`).join('')}</div>`)}
@@ -89,7 +95,7 @@ function openForm(act, kindForNew = 'earn') {
   const drawKind = () => {
     // ค่าที่กรอกไว้แล้วคงไว้เมื่อสลับชนิด
     const pts = form.elements.points?.value ?? v.points;
-    const bonus = form.elements.bonus?.value ?? v.streak_bonus;
+    const bonus = savedBonus;
     const streakOn = form.elements.streak ? form.elements.streak.checked : v.streak_enabled;
     el.querySelectorAll('[data-kind]').forEach(b => b.classList.toggle('on', b.dataset.kind === kind));
     el.querySelector('.kind-fields').innerHTML = kind === 'earn'
@@ -101,12 +107,34 @@ function openForm(act, kindForNew = 'earn') {
     const drawOnce = () => el.querySelectorAll('[data-once]').forEach(b => b.classList.toggle('on', (b.dataset.once === '1') === once));
     el.querySelectorAll('[data-once]').forEach(b => b.onclick = () => { once = b.dataset.once === '1'; drawOnce(); });
     drawOnce();
+    // ไม่นับ streak → โบนัสครบ 7 วันเป็น 0 และกรอกไม่ได้ (ผู้ใช้กำหนด 17 พ.ย. 2569)
+    const sw = form.elements.streak;
+    const applyStreak = () => {
+      const input = form.elements.bonus;
+      if (!input) return;
+      const st = input.closest('.stepper');
+      if (sw.checked) input.value = savedBonus;
+      else { if (+input.value > 0) savedBonus = +input.value; input.value = 0; }
+      input.disabled = !sw.checked;
+      st.querySelectorAll('button').forEach(b => { b.disabled = !sw.checked; });
+      st.classList.toggle('off', !sw.checked);
+    };
+    if (sw) { sw.addEventListener('change', applyStreak); applyStreak(); }
   };
   const drawIcon = () => el.querySelectorAll('[data-icon]').forEach(b => b.classList.toggle('on', b.dataset.icon === icon));
 
   el.querySelectorAll('[data-kind]').forEach(b => b.onclick = () => { kind = b.dataset.kind; drawKind(); });
   el.querySelectorAll('[data-icon]').forEach(b => b.onclick = () => { icon = b.dataset.icon; drawIcon(); });
-  drawKind(); drawIcon();
+  const drawOwners = () => el.querySelectorAll('[data-for]').forEach(b => {
+    const on = owners.has(b.dataset.for);
+    b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+  });
+  el.querySelectorAll('[data-for]').forEach(b => b.onclick = () => {
+    const r = b.dataset.for;
+    if (owners.has(r)) { if (owners.size > 1) owners.delete(r); } else owners.add(r); // ต้องเหลืออย่างน้อย 1 คน
+    drawOwners();
+  });
+  drawKind(); drawIcon(); drawOwners();
 
   form.onsubmit = async e => {
     e.preventDefault();
@@ -116,18 +144,19 @@ function openForm(act, kindForNew = 'earn') {
     const btn = form.querySelector('[type=submit]');
     btn.disabled = true; errBox.innerHTML = '';
     try {
-      await api.upsertActivity({
+      const base = {
         id: act?.id ?? null,
         name,
         kind,
         points: Math.max(1, +form.elements.points.value || 1),
-        streak_bonus: kind === 'earn' ? Math.max(0, +form.elements.bonus.value || 0) : v.streak_bonus,
+        streak_bonus: kind !== 'earn' ? v.streak_bonus : form.elements.streak.checked ? Math.max(0, +form.elements.bonus.value || 0) : 0,
         icon,
         streak_enabled: kind === 'earn' ? form.elements.streak.checked : false,
         is_active: !form.elements.hidden.checked,
         once_per_day: kind === 'earn' ? once : true,
-        owner: act?.owner ?? store.owner(),
-      });
+      };
+      if (isNew) { for (const o of owners) await api.upsertActivity({ ...base, owner: o }); }
+      else await api.upsertActivity({ ...base, owner: act.owner });
       close();
       store.refresh('activities');
     } catch (err) {

@@ -623,11 +623,21 @@ button.hrow { cursor: pointer; }
 }
 
 /* น้องตาล (17 พ.ย. 2569): ปุ่มสลับคน · ป้ายแต้มที่ปรายฟ้าให้ · การ์ดแต้มของอีกคน */
-.owner-seg { margin: 0 0 16px; }
-.given-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.owner-pick { display: flex; gap: 10px; margin: 16px 20px 0; }
+.op-btn { flex: 1; display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 12px; border-radius: 18px;
+  background: var(--card); border: 1.5px solid transparent; color: var(--text-2); font-size: 15px; cursor: pointer; text-align: left; }
+.op-av { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  background: var(--card-foot); color: var(--text-2); font-size: 14px; font-weight: 600; }
+.op-btn.on { border-color: var(--pink); color: var(--text); font-weight: 600; background: rgba(217,86,127,.08); }
+.op-btn.on .op-av { background: var(--pink); color: #fff; }
+.given-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 20px 0; }
 .given-note { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: var(--card); font-size: 14px; color: var(--text-2); }
 .given-note b { color: var(--text); font-weight: 600; }
 .given-ico { width: 28px; height: 28px; border-radius: 50%; background: rgba(217,86,127,.14); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.other-card { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding: 12px 16px; border-radius: 16px; background: var(--card); font-size: 14px; }
+.other-card { display: flex; align-items: center; justify-content: space-between; margin: 12px 20px 0; padding: 12px 16px; border-radius: 16px; background: var(--card); font-size: 14px; }
 .other-name { color: var(--text-2); }
 .other-pts { font-weight: 600; color: var(--text); }
+.owner-checks { display: flex; gap: 10px; }
+.owner-checks button { flex: 1; height: 44px; border-radius: 999px; border: 1.5px solid var(--card-foot); background: transparent; color: var(--text-2); font-size: 15px; cursor: pointer; }
+.owner-checks button.on { border-color: var(--pink); background: rgba(217,86,127,.1); color: var(--text); font-weight: 600; }
+.stepper.off { opacity: .45; }

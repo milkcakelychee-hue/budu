@@ -158,7 +158,12 @@ export const ownerName = role => store.memberOf(role)?.nickname ?? (role === 'ki
 export function ownerSwitch() {
   if (!store.isAdmin()) return '';
   const o = store.owner();
-  return `<div class="seg owner-seg" role="group" aria-label="${esc(S.ownerSwitchLabel)}">
-    ${['partner', 'kid'].map(r => `<button type="button" data-owner="${r}" class="${o === r ? 'on' : ''}" aria-pressed="${o === r}">${esc(ownerName(r))}</button>`).join('')}
+  // การ์ดคน 2 ใบ (วงกลมอักษรแรก + ชื่อ) ต่างจากปุ่มแบ่งส่วนทั่วไป · คนที่เลือกขอบชมพู
+  return `<div class="owner-pick" role="group" aria-label="${esc(S.ownerSwitchLabel)}">
+    ${['partner', 'kid'].map(r => {
+      const name = ownerName(r);
+      return `<button type="button" data-owner="${r}" class="op-btn${o === r ? ' on' : ''}" aria-pressed="${o === r}">
+        <span class="op-av">${esc([...name.replace(/^[เแโใไ]/, '')][0] ?? '')}</span><span class="op-name">${esc(name)}</span></button>`;
+    }).join('')}
   </div>`;
 }
