@@ -1,7 +1,7 @@
 // จัดการกิจกรรม (เฉพาะผู้ดูแล): รายการแยก ให้แต้ม / หักแต้ม · แผ่นล่างเพิ่ม/แก้/ซ่อน
 import { S, t } from '../strings.js';
 import { RULES } from '../config.js';
-import { esc, subHead, iconTile, hiddenBadge, chevron, emptyCard, openSheet, field, stepper, bindSteppers, switchRow } from '../ui.js';
+import { esc, subHead, iconTile, hiddenBadge, chevron, emptyCard, openSheet, field, stepper, bindSteppers, switchRow, ownerSwitch } from '../ui.js';
 import { svgIcon, UI_ICONS, ACTIVITY_ICONS } from '../icons.js';
 import * as api from '../api.js';
 import * as store from '../store.js';
@@ -49,6 +49,7 @@ function draw() {
   const deduct = acts.filter(a => a.kind === 'deduct');
   root.innerHTML = `<section class="screen no-nav has-fab">
     ${subHead(S.manageActivities, '#/settings')}
+    ${ownerSwitch()}
     ${acts.length
       ? group(S.kindEarnOpt, earn) + group(S.kindDeductOpt, deduct)
       : emptyCard(UI_ICONS.list, S.activitiesEmpty)}
@@ -125,6 +126,7 @@ function openForm(act, kindForNew = 'earn') {
         streak_enabled: kind === 'earn' ? form.elements.streak.checked : false,
         is_active: !form.elements.hidden.checked,
         once_per_day: kind === 'earn' ? once : true,
+        owner: act?.owner ?? store.owner(),
       });
       close();
       store.refresh('activities');

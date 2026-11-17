@@ -20,7 +20,7 @@ create table if not exists public.budu_members (
   id uuid primary key default gen_random_uuid(),
   couple_id uuid not null references public.budu_couples(id) on delete cascade,
   auth_uid uuid not null unique,
-  role text not null check (role in ('admin','partner')),
+  role text not null check (role in ('admin','partner','kid')),  -- kid = น้องตาล
   nickname text not null check (char_length(nickname) between 1 and 30),
   created_at timestamptz not null default now(),
   unique (couple_id, role)
@@ -91,6 +91,17 @@ create table if not exists public.budu_coupons (
 create index if not exists budu_coupons_couple on public.budu_coupons (couple_id);
 
 -- ---------------------------------------------------------------------
+-- เจ้าของข้อมูล (17 พ.ย. 2569): กิจกรรม รางวัล รายการแต้ม คูปอง แยกเป็นของ 'partner' (เตย) หรือ 'kid' (น้องตาล)
+-- ข้อมูลเดิมทั้งหมดเป็นของเตย (ค่าเริ่มต้น 'partner')
+-- ---------------------------------------------------------------------
+alter table public.budu_members drop constraint if exists budu_members_role_check;
+alter table public.budu_members add constraint budu_members_role_check check (role in ('admin','partner','kid'));
+alter table public.budu_activities add column if not exists owner text not null default 'partner' check (owner in ('partner','kid'));
+alter table public.budu_rewards    add column if not exists owner text not null default 'partner' check (owner in ('partner','kid'));
+alter table public.budu_entries    add column if not exists owner text not null default 'partner' check (owner in ('partner','kid'));
+alter table public.budu_coupons    add column if not exists owner text not null default 'partner' check (owner in ('partner','kid'));
+
+-- ---------------------------------------------------------------------
 -- ฟังก์ชันช่วย (security definer → อ่าน members ได้โดยไม่ติด RLS)
 -- ---------------------------------------------------------------------
 create or replace function public.budu_my_couple_id() returns uuid
@@ -101,6 +112,12 @@ $$;
 create or replace function public.budu_my_role() returns text
 language sql stable security definer set search_path = public as $$
   select role from public.budu_members where auth_uid = auth.uid()
+$$;
+
+-- ผู้ดูแลเห็นทุกคน · คนสะสมแต้มเห็นเฉพาะของตัวเอง (ใช้ใน RLS)
+create or replace function public.budu_can_see(p_owner text) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.budu_members where auth_uid = auth.uid() and (role = 'admin' or role = p_owner))
 $$;
 
 -- คืนแถวสมาชิกของผู้เรียก ถ้าไม่มีหรือบทบาทไม่ตรงให้ error
@@ -169,8 +186,8 @@ begin
   where pos % 7 = 0;
 
   -- เพิ่มโบนัสที่ขาด
-  insert into public.budu_entries (couple_id, activity_id, activity_name, kind, points, status, entry_date, created_by, decided_at)
-  select a.couple_id, a.id, a.name, 'streak_bonus', a.streak_bonus, 'confirmed', o.d, null, now()
+  insert into public.budu_entries (couple_id, activity_id, activity_name, kind, points, status, entry_date, created_by, decided_at, owner)
+  select a.couple_id, a.id, a.name, 'streak_bonus', a.streak_bonus, 'confirmed', o.d, null, now(), a.owner
   from unnest(owed) as o(d)
   where not exists (select 1 from public.budu_entries e
                     where e.activity_id = a.id and e.kind = 'streak_bonus' and e.status = 'confirmed' and e.entry_date = o.d);
@@ -196,18 +213,21 @@ begin
                            'nickname', m.nickname, 'pair_code', public.budu_format_code(c.pair_code));
 end $$;
 
-create or replace function public.budu_join_couple(p_code text) returns json
+drop function if exists public.budu_join_couple(text);
+-- p_role: 'partner' (เตย) หรือ 'kid' (น้องตาล)
+create or replace function public.budu_join_couple(p_code text, p_role text default 'partner') returns json
 language plpgsql security definer set search_path = public as $$
 declare c public.budu_couples; m public.budu_members;
 begin
   perform public.budu_require_no_member();
+  if p_role not in ('partner','kid') then raise exception 'forbidden'; end if;
   select * into c from public.budu_couples where pair_code = public.budu_normalize_code(p_code) for update;
   if not found then raise exception 'code_not_found'; end if;
-  if exists (select 1 from public.budu_members where couple_id = c.id and role = 'partner') then
+  if exists (select 1 from public.budu_members where couple_id = c.id and role = p_role) then
     raise exception 'role_taken';
   end if;
   insert into public.budu_members (couple_id, auth_uid, role, nickname)
-    values (c.id, auth.uid(), 'partner', 'เตย') returning * into m;
+    values (c.id, auth.uid(), p_role, case p_role when 'kid' then 'น้องตาล' else 'เตย' end) returning * into m;
   return json_build_object('couple_id', c.id, 'member_id', m.id, 'role', m.role,
                            'nickname', m.nickname, 'pair_code', public.budu_format_code(c.pair_code));
 end $$;
@@ -247,18 +267,19 @@ begin
     where id = p_activity_id and couple_id = m.couple_id and is_active and kind = 'earn'
     for update;
   if not found then raise exception 'activity_not_found'; end if;
+  if m.role <> 'admin' and a.owner <> m.role then raise exception 'activity_not_found'; end if;
   if a.once_per_day and exists (
     select 1 from public.budu_entries
      where activity_id = a.id and kind = 'earn' and status in ('pending','confirmed')
        and entry_date = (now() at time zone 'Asia/Bangkok')::date) then
     raise exception 'already_logged';
   end if;
-  insert into public.budu_entries (couple_id, activity_id, activity_name, kind, points, status, created_by, decided_by, decided_at)
+  insert into public.budu_entries (couple_id, activity_id, activity_name, kind, points, status, created_by, decided_by, decided_at, owner)
   values (m.couple_id, a.id, a.name, 'earn', a.points,
           case when m.role = 'admin' then 'confirmed' else 'pending' end,
           m.id,
           case when m.role = 'admin' then m.id end,
-          case when m.role = 'admin' then now() end)
+          case when m.role = 'admin' then now() end, a.owner)
   returning * into e;
   if e.status = 'confirmed' then perform public.budu_sync_streak(a.id); end if;
   return e;
@@ -272,8 +293,8 @@ begin
   select * into a from public.budu_activities
     where id = p_activity_id and couple_id = m.couple_id and is_active and kind = 'deduct';
   if not found then raise exception 'activity_not_found'; end if;
-  insert into public.budu_entries (couple_id, activity_id, activity_name, kind, points, status, created_by, decided_by, decided_at)
-  values (m.couple_id, a.id, a.name, 'deduct', -a.points, 'confirmed', m.id, m.id, now())
+  insert into public.budu_entries (couple_id, activity_id, activity_name, kind, points, status, created_by, decided_by, decided_at, owner)
+  values (m.couple_id, a.id, a.name, 'deduct', -a.points, 'confirmed', m.id, m.id, now(), a.owner)
   returning * into e;
   return e;
 end $$;
@@ -314,18 +335,19 @@ create or replace function public.budu_redeem_reward(p_reward_id uuid) returns p
 language plpgsql security definer set search_path = public as $$
 declare m public.budu_members; r public.budu_rewards; bal int; e public.budu_entries; c public.budu_coupons;
 begin
-  m := public.budu_require('partner');
+  m := public.budu_require();
+  if m.role not in ('partner','kid') then raise exception 'forbidden'; end if;
   perform 1 from public.budu_couples where id = m.couple_id for update; -- กันกดพร้อมกัน
-  select * into r from public.budu_rewards where id = p_reward_id and couple_id = m.couple_id and is_active;
+  select * into r from public.budu_rewards where id = p_reward_id and couple_id = m.couple_id and is_active and owner = m.role;
   if not found then raise exception 'reward_not_found'; end if;
   select coalesce(sum(points), 0) into bal from public.budu_entries
-    where couple_id = m.couple_id and status = 'confirmed';
+    where couple_id = m.couple_id and status = 'confirmed' and owner = m.role;
   if bal < r.cost then raise exception 'insufficient_points'; end if;
-  insert into public.budu_entries (couple_id, activity_id, activity_name, kind, points, status, created_by, decided_by, decided_at)
-  values (m.couple_id, null, r.name, 'redeem', -r.cost, 'confirmed', m.id, m.id, now())
+  insert into public.budu_entries (couple_id, activity_id, activity_name, kind, points, status, created_by, decided_by, decided_at, owner)
+  values (m.couple_id, null, r.name, 'redeem', -r.cost, 'confirmed', m.id, m.id, now(), m.role)
   returning * into e;
-  insert into public.budu_coupons (couple_id, reward_id, reward_name, cost, status, redeem_entry_id, redeemed_by)
-  values (m.couple_id, r.id, r.name, r.cost, 'active', e.id, m.id)
+  insert into public.budu_coupons (couple_id, reward_id, reward_name, cost, status, redeem_entry_id, redeemed_by, owner)
+  values (m.couple_id, r.id, r.name, r.cost, 'active', e.id, m.id, m.role)
   returning * into c;
   return c;
 end $$;
@@ -334,9 +356,10 @@ create or replace function public.budu_request_coupon_use(p_coupon_id uuid) retu
 language plpgsql security definer set search_path = public as $$
 declare m public.budu_members; c public.budu_coupons;
 begin
-  m := public.budu_require('partner');
+  m := public.budu_require();
+  if m.role not in ('partner','kid') then raise exception 'forbidden'; end if;
   update public.budu_coupons set status = 'requested', requested_at = now()
-   where id = p_coupon_id and couple_id = m.couple_id and status = 'active'
+   where id = p_coupon_id and couple_id = m.couple_id and status = 'active' and owner = m.role
   returning * into c;
   if not found then raise exception 'coupon_not_found'; end if;
   return c;
@@ -371,20 +394,24 @@ end $$;
 -- ---------------------------------------------------------------------
 -- รุ่นเดิม 8 พารามิเตอร์ถูกแทนด้วยรุ่นที่มี p_once_per_day
 drop function if exists public.budu_upsert_activity(uuid, text, text, int, int, text, boolean, boolean);
+drop function if exists public.budu_upsert_activity(uuid, text, text, int, int, text, boolean, boolean, boolean);
+-- p_owner: เป็นของใคร ('partner'/'kid') ใช้ตอนสร้างเท่านั้น แก้ทีหลังไม่ได้
 create or replace function public.budu_upsert_activity(
   p_id uuid, p_name text, p_kind text, p_points int, p_streak_bonus int,
-  p_icon text, p_streak_enabled boolean, p_is_active boolean, p_once_per_day boolean
+  p_icon text, p_streak_enabled boolean, p_is_active boolean, p_once_per_day boolean,
+  p_owner text default 'partner'
 ) returns public.budu_activities
 language plpgsql security definer set search_path = public as $$
 declare m public.budu_members; a public.budu_activities; nxt int;
 begin
   m := public.budu_require('admin');
   if p_id is null then
+    if coalesce(p_owner, 'partner') not in ('partner','kid') then raise exception 'forbidden'; end if;
     select coalesce(max(sort_order), 0) + 1 into nxt from public.budu_activities where couple_id = m.couple_id;
-    insert into public.budu_activities (couple_id, name, kind, points, streak_bonus, icon, streak_enabled, is_active, once_per_day, sort_order)
+    insert into public.budu_activities (couple_id, name, kind, points, streak_bonus, icon, streak_enabled, is_active, once_per_day, sort_order, owner)
     values (m.couple_id, btrim(p_name), p_kind, p_points, coalesce(p_streak_bonus, 10),
             coalesce(p_icon, 'star'), coalesce(p_streak_enabled, true), coalesce(p_is_active, true),
-            coalesce(p_once_per_day, true), nxt)
+            coalesce(p_once_per_day, true), nxt, coalesce(p_owner, 'partner'))
     returning * into a;
   else
     -- kind แก้ไม่ได้หลังสร้าง (เมินค่าที่ส่งมา)
@@ -399,15 +426,17 @@ begin
   return a;
 end $$;
 
-create or replace function public.budu_upsert_reward(p_id uuid, p_name text, p_cost int, p_is_active boolean)
+drop function if exists public.budu_upsert_reward(uuid, text, int, boolean);
+create or replace function public.budu_upsert_reward(p_id uuid, p_name text, p_cost int, p_is_active boolean, p_owner text default 'partner')
 returns public.budu_rewards
 language plpgsql security definer set search_path = public as $$
 declare m public.budu_members; r public.budu_rewards;
 begin
   m := public.budu_require('admin');
   if p_id is null then
-    insert into public.budu_rewards (couple_id, name, cost, is_active)
-    values (m.couple_id, btrim(p_name), p_cost, coalesce(p_is_active, true))
+    if coalesce(p_owner, 'partner') not in ('partner','kid') then raise exception 'forbidden'; end if;
+    insert into public.budu_rewards (couple_id, name, cost, is_active, owner)
+    values (m.couple_id, btrim(p_name), p_cost, coalesce(p_is_active, true), coalesce(p_owner, 'partner'))
     returning * into r;
   else
     update public.budu_rewards set name = btrim(p_name), cost = p_cost, is_active = coalesce(p_is_active, is_active)
@@ -425,6 +454,17 @@ begin
   m := public.budu_require('admin');
   delete from public.budu_rewards where id = p_id and couple_id = m.couple_id;
   if not found then raise exception 'reward_not_found'; end if;
+end $$;
+
+-- แต้มรวมของแต่ละคน (เตย/น้องตาลเห็นแค่ตัวเลขของอีกคน ไม่เห็นรายละเอียด)
+create or replace function public.budu_points_summary() returns json
+language plpgsql stable security definer set search_path = public as $$
+declare m public.budu_members;
+begin
+  m := public.budu_require();
+  return json_build_object(
+    'partner', (select coalesce(sum(points), 0) from public.budu_entries where couple_id = m.couple_id and status = 'confirmed' and owner = 'partner'),
+    'kid',     (select coalesce(sum(points), 0) from public.budu_entries where couple_id = m.couple_id and status = 'confirmed' and owner = 'kid'));
 end $$;
 
 create or replace function public.budu_export_all() returns json
@@ -465,10 +505,10 @@ drop policy if exists budu_coupons_select    on public.budu_coupons;
 
 create policy budu_couples_select    on public.budu_couples    for select to authenticated using (id = public.budu_my_couple_id());
 create policy budu_members_select    on public.budu_members    for select to authenticated using (couple_id = public.budu_my_couple_id());
-create policy budu_activities_select on public.budu_activities for select to authenticated using (couple_id = public.budu_my_couple_id());
-create policy budu_entries_select    on public.budu_entries    for select to authenticated using (couple_id = public.budu_my_couple_id());
-create policy budu_rewards_select    on public.budu_rewards    for select to authenticated using (couple_id = public.budu_my_couple_id());
-create policy budu_coupons_select    on public.budu_coupons    for select to authenticated using (couple_id = public.budu_my_couple_id());
+create policy budu_activities_select on public.budu_activities for select to authenticated using (couple_id = public.budu_my_couple_id() and public.budu_can_see(owner));
+create policy budu_entries_select    on public.budu_entries    for select to authenticated using (couple_id = public.budu_my_couple_id() and public.budu_can_see(owner));
+create policy budu_rewards_select    on public.budu_rewards    for select to authenticated using (couple_id = public.budu_my_couple_id() and public.budu_can_see(owner));
+create policy budu_coupons_select    on public.budu_coupons    for select to authenticated using (couple_id = public.budu_my_couple_id() and public.budu_can_see(owner));
 
 -- สิทธิ์ตาราง: authenticated อ่านได้อย่างเดียว · anon ไม่ได้อะไรเลย
 revoke all on public.budu_couples, public.budu_members, public.budu_activities,
@@ -478,26 +518,26 @@ grant select on public.budu_couples, public.budu_members, public.budu_activities
 
 -- สิทธิ์ฟังก์ชัน: ถอนจากทุกคน แล้วให้ authenticated เฉพาะตัวที่ client เรียก
 revoke execute on function
-  public.budu_my_couple_id(), public.budu_my_role(), public.budu_require(text), public.budu_require_no_member(),
+  public.budu_my_couple_id(), public.budu_my_role(), public.budu_can_see(text), public.budu_require(text), public.budu_require_no_member(),
   public.budu_new_code(), public.budu_sync_streak(uuid),
-  public.budu_create_couple(), public.budu_join_couple(text), public.budu_rejoin(text, text), public.budu_get_pair_code(),
+  public.budu_create_couple(), public.budu_join_couple(text, text), public.budu_rejoin(text, text), public.budu_get_pair_code(),
   public.budu_log_earn(uuid), public.budu_log_deduct(uuid), public.budu_decide_entry(uuid, boolean), public.budu_cancel_entry(uuid),
   public.budu_redeem_reward(uuid), public.budu_request_coupon_use(uuid), public.budu_mark_coupon_used(uuid),
   public.budu_decline_coupon_request(uuid),
-  public.budu_upsert_activity(uuid, text, text, int, int, text, boolean, boolean, boolean),
-  public.budu_upsert_reward(uuid, text, int, boolean), public.budu_delete_reward(uuid), public.budu_export_all()
+  public.budu_upsert_activity(uuid, text, text, int, int, text, boolean, boolean, boolean, text),
+  public.budu_upsert_reward(uuid, text, int, boolean, text), public.budu_points_summary(), public.budu_delete_reward(uuid), public.budu_export_all()
 from public, anon, authenticated;
 
 -- ใช้ใน RLS จึงต้องให้ authenticated เรียกได้
-grant execute on function public.budu_my_couple_id(), public.budu_my_role() to authenticated;
+grant execute on function public.budu_my_couple_id(), public.budu_my_role(), public.budu_can_see(text) to authenticated;
 
 grant execute on function
-  public.budu_create_couple(), public.budu_join_couple(text), public.budu_rejoin(text, text), public.budu_get_pair_code(),
+  public.budu_create_couple(), public.budu_join_couple(text, text), public.budu_rejoin(text, text), public.budu_get_pair_code(),
   public.budu_log_earn(uuid), public.budu_log_deduct(uuid), public.budu_decide_entry(uuid, boolean), public.budu_cancel_entry(uuid),
   public.budu_redeem_reward(uuid), public.budu_request_coupon_use(uuid), public.budu_mark_coupon_used(uuid),
   public.budu_decline_coupon_request(uuid),
-  public.budu_upsert_activity(uuid, text, text, int, int, text, boolean, boolean, boolean),
-  public.budu_upsert_reward(uuid, text, int, boolean), public.budu_delete_reward(uuid), public.budu_export_all()
+  public.budu_upsert_activity(uuid, text, text, int, int, text, boolean, boolean, boolean, text),
+  public.budu_upsert_reward(uuid, text, int, boolean, text), public.budu_points_summary(), public.budu_delete_reward(uuid), public.budu_export_all()
 to authenticated;
 
 -- ---------------------------------------------------------------------

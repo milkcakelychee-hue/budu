@@ -12,7 +12,7 @@ drop schema if exists budu_test cascade;
 create schema budu_test;
 grant usage on schema budu_test to authenticated;
 
--- uuid ปลอม: A = ผู้ดูแล, B = แฟน, C = คนนอก, D = ผู้ดูแลคู่อื่น, E = เครื่องใหม่ของแฟน (rejoin)
+-- uuid ปลอม: A = ผู้ดูแล, B = แฟน, C = คนนอก, D = ผู้ดูแลคู่อื่น, E = เครื่องใหม่ของแฟน (rejoin), F = น้องตาล, 9 = น้องตาลคนที่ 2 (uuid ใช้ได้แค่ 0-9 a-f)
 create or replace function budu_test.uid(k text) returns uuid language sql immutable as $$
   select ('00000000-0000-4000-8000-0000000000' || k || k)::uuid
 $$;
@@ -20,7 +20,7 @@ $$;
 -- ลบข้อมูลทดสอบที่ค้างจากรอบก่อน
 delete from public.budu_couples where id in (
   select couple_id from public.budu_members
-  where auth_uid in (budu_test.uid('a'), budu_test.uid('b'), budu_test.uid('c'), budu_test.uid('d'), budu_test.uid('e')));
+  where auth_uid in (budu_test.uid('a'), budu_test.uid('b'), budu_test.uid('c'), budu_test.uid('d'), budu_test.uid('e'), budu_test.uid('f'), budu_test.uid('9')));
 
 create table budu_test.results (n serial, name text, ok boolean, detail text);
 grant all on budu_test.results to authenticated;
@@ -247,7 +247,8 @@ select budu_test.expect_ok('cancel วันที่ 3 ของ streak',
   format('select public.budu_cancel_entry(%L)', (select id from public.budu_entries where activity_id = current_setting('t.earn')::uuid
     and kind = 'earn' and entry_date = date '2026-01-04' and status = 'confirmed')));
 reset role;
-select budu_test.check('ยกเลิกกลางทาง โบนัสปรับเป็นวันที่ 8', budu_test.bonus_days(current_setting('t.earn')::uuid) = '8', budu_test.bonus_days(current_setting('t.earn')::uuid));
+select budu_test.check('ยกเลิกกลางทาง โบนัสปรับเป็นวันที่ 8 และวันนี้ (วันนี้มี earn อีก 1 = สะสมครบ 14)',
+  budu_test.bonus_days(current_setting('t.earn')::uuid) = '8,' || ((now() at time zone 'Asia/Bangkok')::date - date '2026-01-01'), budu_test.bonus_days(current_setting('t.earn')::uuid));
 
 -- ข้ามวันที่ 5: ทำวันที่ 1-4, 6-11 → สะสมครบ 7 ที่วันที่ 8 · กิจกรรม streak_bonus = 20
 select budu_test.seed(current_setting('t.earn20')::uuid, array[1,2,3,4,6,7,8,9,10,11]);
@@ -274,6 +275,57 @@ select budu_test.check('หลายครั้งต่อวัน · มี 
 select budu_test.act('a');
 select budu_test.expect_ok('แก้เป็นวันละครั้ง', format($$select public.budu_upsert_activity(%L, 'ล้างจาน', 'earn', 5, 10, 'broom', true, true, true)$$, current_setting('t.multi')));
 select budu_test.expect_error('วันละครั้ง · มีรายการวันนี้แล้วกดไม่ได้', format('select public.budu_log_earn(%L)', current_setting('t.multi')), 'already_logged');
+
+-- ---------------------------------------------------------------------
+-- น้องตาล (role kid): ข้อมูลแยกจากเตย
+-- ---------------------------------------------------------------------
+set role authenticated;
+select budu_test.act('f');
+select budu_test.expect_ok('น้องตาล join ด้วยรหัสเดิม', format($$select public.budu_join_couple(%L, 'kid')$$, current_setting('t.code')));
+select budu_test.check('ได้ role kid ชื่อ น้องตาล',
+  (select role = 'kid' and nickname = 'น้องตาล' from public.budu_members where auth_uid = budu_test.uid('f')));
+select budu_test.act('9');
+select budu_test.expect_error('บทบาทน้องตาลซ้ำ', format($$select public.budu_join_couple(%L, 'kid')$$, current_setting('t.code')), 'role_taken');
+select budu_test.expect_error('join บทบาท admin ไม่ได้', format($$select public.budu_join_couple(%L, 'admin')$$, current_setting('t.code')), 'forbidden');
+
+select budu_test.act('a');
+select set_config('t.kact', (public.budu_upsert_activity(null, 'เก็บของเล่น', 'earn', 7, 10, 'star', false, true, true, 'kid')).id::text, false);
+select set_config('t.pact', (public.budu_upsert_activity(null, 'งานของเตย', 'earn', 3, 10, 'star', false, true, true, 'partner')).id::text, false);
+select set_config('t.krew', (public.budu_upsert_reward(null, 'ไอศกรีม', 5, true, 'kid')).id::text, false);
+select set_config('t.prew', (public.budu_upsert_reward(null, 'รางวัลเตย', 1, true, 'partner')).id::text, false);
+select budu_test.expect_error('owner ไม่ถูกต้อง', $$select public.budu_upsert_activity(null, 'x', 'earn', 1, 10, 'star', false, true, true, 'admin')$$, 'forbidden');
+select budu_test.check('ผู้ดูแลเห็นกิจกรรมทั้งของเตยและน้องตาล',
+  (select count(*) = 2 from public.budu_activities where id in (current_setting('t.kact')::uuid, current_setting('t.pact')::uuid)));
+
+select budu_test.act('f');
+select budu_test.check('น้องตาลไม่เห็นกิจกรรม/รางวัล/รายการของเตย',
+  not exists (select 1 from public.budu_activities where owner = 'partner')
+  and not exists (select 1 from public.budu_rewards where owner = 'partner')
+  and not exists (select 1 from public.budu_entries where owner = 'partner'));
+select budu_test.check('น้องตาลเห็นกิจกรรมของตัวเอง', exists (select 1 from public.budu_activities where id = current_setting('t.kact')::uuid));
+select budu_test.expect_error('น้องตาลกดกิจกรรมของเตยไม่ได้', format('select public.budu_log_earn(%L)', current_setting('t.pact')), 'activity_not_found');
+select budu_test.expect_ok('น้องตาลส่งกิจกรรมของตัวเอง', format('select public.budu_log_earn(%L)', current_setting('t.kact')));
+select budu_test.check('รายการของน้องตาล pending owner kid',
+  (select status = 'pending' and owner = 'kid' from public.budu_entries where activity_id = current_setting('t.kact')::uuid));
+select budu_test.expect_error('น้องตาลแลกรางวัลของเตยไม่ได้', format('select public.budu_redeem_reward(%L)', current_setting('t.prew')), 'reward_not_found');
+select budu_test.expect_error('น้องตาลแต้มไม่พอ (ไม่ใช้แต้มของเตย)', format('select public.budu_redeem_reward(%L)', current_setting('t.krew')), 'insufficient_points');
+select budu_test.expect_error('น้องตาลจัดการกิจกรรมไม่ได้', $$select public.budu_upsert_activity(null, 'x', 'earn', 1, 10, 'star', false, true, true, 'kid')$$, 'forbidden');
+
+select budu_test.act('b');
+select budu_test.check('เตยไม่เห็นข้อมูลของน้องตาล',
+  not exists (select 1 from public.budu_activities where owner = 'kid')
+  and not exists (select 1 from public.budu_entries where owner = 'kid'));
+select budu_test.expect_error('เตยกดกิจกรรมของน้องตาลไม่ได้', format('select public.budu_log_earn(%L)', current_setting('t.kact')), 'activity_not_found');
+
+select budu_test.act('a');
+select budu_test.expect_ok('ยืนยันรายการของน้องตาล', format('select public.budu_decide_entry(%L, true)',
+  (select id from public.budu_entries where activity_id = current_setting('t.kact')::uuid)));
+select budu_test.act('b');
+select budu_test.check('แต้มรวมแยกคน: น้องตาล = 7', (public.budu_points_summary() ->> 'kid')::int = 7, public.budu_points_summary()::text);
+select budu_test.act('f');
+select budu_test.expect_ok('น้องตาลแลกรางวัลด้วยแต้มตัวเอง', format('select public.budu_redeem_reward(%L)', current_setting('t.krew')));
+select budu_test.check('คูปองเป็นของน้องตาล', exists (select 1 from public.budu_coupons where reward_id = current_setting('t.krew')::uuid and owner = 'kid'));
+select budu_test.check('แต้มน้องตาลเหลือ 2', (public.budu_points_summary() ->> 'kid')::int = 2, public.budu_points_summary()::text);
 
 -- ---------------------------------------------------------------------
 -- rejoin (เครื่องใหม่ของแฟน)

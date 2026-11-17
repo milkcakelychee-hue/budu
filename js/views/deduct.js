@@ -1,6 +1,6 @@
 // หักแต้ม: สรุปสัปดาห์ · ป้ายเรื่องที่หักแต้ม (ผู้ดูแลกด −) · ประวัติการโดนหักแต้ม · แฟนดูอย่างเดียว
 import { S, t } from '../strings.js';
-import { esc, pageHead, iconTile, confirmSheet, act, fmtTime } from '../ui.js';
+import { esc, pageHead, iconTile, confirmSheet, act, fmtTime, ownerSwitch } from '../ui.js';
 import { svgIcon, UI_ICONS, ACTIVITY_ICONS } from '../icons.js';
 import * as api from '../api.js';
 import * as store from '../store.js';
@@ -30,7 +30,7 @@ function draw() {
   const lastList = deducts.filter(e => inWeek(e, lastWeek));
 
   if (!acts.length && !deducts.length) {
-    root.innerHTML = `<section class="screen">${pageHead(S.deductTitle)}
+    root.innerHTML = `<section class="screen">${pageHead(S.deductTitle)}${ownerSwitch()}
       <div class="plain-empty">
         <span class="empty-ico tile">${svgIcon(UI_ICONS.deduct, { size: 26 })}</span>
         <div class="empty-text">${esc(admin ? S.deductEmpty : S.deductEmptyPartner)}</div>
@@ -62,7 +62,7 @@ function draw() {
     </div>`).join('<div class="hist-sep"></div>');
 
   root.innerHTML = `<section class="screen">
-    ${pageHead(S.deductTitle)}
+    ${pageHead(S.deductTitle)}${ownerSwitch()}
     <div class="summary-card">
       <div class="glow-mid"></div>
       <div class="bc-label">${esc(S.deductWeekTotal)}</div>

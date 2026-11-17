@@ -1,7 +1,7 @@
 // สถิติ: แต้มสัปดาห์นี้ (ได้/ถูกหัก) · กราฟแท่ง 8 สัปดาห์ (เริ่มจันทร์) · streak ของแต่ละกิจกรรม · ลิงก์ประวัติ
 // นับเฉพาะ confirmed · "ได้" = earn + streak_bonus · "ถูกหัก" = deduct · ไม่นับ redeem
 import { S, t } from '../strings.js';
-import { esc, pageHead, iconTile } from '../ui.js';
+import { esc, pageHead, iconTile, ownerSwitch } from '../ui.js';
 import { svgIcon, UI_ICONS } from '../icons.js';
 import { RULES } from '../config.js';
 import * as store from '../store.js';
@@ -60,7 +60,7 @@ function draw() {
   const counted = entries.filter(e => e.status === 'confirmed' && e.kind !== 'redeem');
 
   if (!counted.length) {
-    root.innerHTML = `<section class="screen">${pageHead(S.statsTitle)}
+    root.innerHTML = `<section class="screen">${pageHead(S.statsTitle)}${ownerSwitch()}
       <div class="plain-empty"><span class="empty-ico tile">${svgIcon(UI_ICONS.stats, { size: 26 })}</span>
       <div class="empty-text">${esc(S.statsEmpty)}</div></div>
       <div class="center-link"><a href="#/history">${esc(S.statsAllHistory)}${svgIcon(UI_ICONS.chevron, { size: 16, width: 1.8 })}</a></div></section>`;
@@ -81,7 +81,7 @@ function draw() {
   streakActs.sort((a, b) => sk(b) - sk(a));
 
   root.innerHTML = `<section class="screen">
-    ${pageHead(S.statsTitle)}
+    ${pageHead(S.statsTitle)}${ownerSwitch()}
     <div class="stat-pair">
       <div class="stat-box"><div class="corner-glow soft"></div>
         <div class="sb-k"><span class="key e"></span>${esc(S.statsEarned)}</div>

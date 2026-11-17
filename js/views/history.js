@@ -1,6 +1,6 @@
 // ประวัติ: รายการทั้งหมดใหม่ → เก่า จัดกลุ่มตามวัน · ผู้ดูแลแตะรายการให้แต้ม/หักแต้มที่ยืนยันแล้ว → ยกเลิกรายการ
 import { S, thaiDate } from '../strings.js';
-import { esc, subHead, iconTile, openSheet, confirmSheet, act } from '../ui.js';
+import { esc, subHead, iconTile, openSheet, confirmSheet, act, ownerSwitch } from '../ui.js';
 import { svgIcon, UI_ICONS } from '../icons.js';
 import * as api from '../api.js';
 import * as store from '../store.js';
@@ -53,7 +53,7 @@ function draw() {
     body = [...groups].map(([d, list]) => `<div class="group-label">${esc(thaiDate(new Date(`${d}T12:00:00+07:00`)))}</div>
       <div class="list-card">${list.map(e => rowHtml(e)).join('<div class="hist-sep"></div>')}</div>`).join('');
   }
-  root.innerHTML = `<section class="screen">${subHead(S.historyTitle, '#/stats')}${body}</section>`;
+  root.innerHTML = `<section class="screen">${subHead(S.historyTitle, '#/stats')}${ownerSwitch()}${body}</section>`;
   root.querySelectorAll('button.hrow').forEach(b => b.onclick = () => openOptions(entries.find(e => e.id === b.dataset.id)));
 }
 

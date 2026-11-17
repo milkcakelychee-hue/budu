@@ -1,6 +1,7 @@
 // ส่วนประกอบหน้าจอที่ใช้ซ้ำ
 import { S, thaiDate } from './strings.js';
 import { svgIcon, UI_ICONS, ACTIVITY_ICONS } from './icons.js';
+import * as store from './store.js';
 
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -151,3 +152,13 @@ export const subHead = (title, back) =>
   `<div class="sub-top"><a class="round-btn" href="${back}" aria-label="${S.a11yBack}">${svgIcon(UI_ICONS.back, { size: 20 })}</a></div><h1 class="sub-title">${esc(title)}</h1>`;
 
 export const chevron = () => `<span class="chev">${svgIcon(UI_ICONS.chevron, { size: 18, width: 1.8 })}</span>`;
+
+// ปุ่มสลับ "เตย | น้องตาล" (เฉพาะปรายฟ้า) · กดแล้ว app.js เรียก store.setViewOwner
+export const ownerName = role => store.memberOf(role)?.nickname ?? (role === 'kid' ? S.roleKidName : S.rolePartnerName);
+export function ownerSwitch() {
+  if (!store.isAdmin()) return '';
+  const o = store.owner();
+  return `<div class="seg owner-seg" role="group" aria-label="${esc(S.ownerSwitchLabel)}">
+    ${['partner', 'kid'].map(r => `<button type="button" data-owner="${r}" class="${o === r ? 'on' : ''}" aria-pressed="${o === r}">${esc(ownerName(r))}</button>`).join('')}
+  </div>`;
+}

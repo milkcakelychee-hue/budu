@@ -1,6 +1,6 @@
 // วันนี้: แต้มสะสม + รางวัลเป้าหมาย · กิจวัตรวันนี้ · รอยืนยัน (+ คำขอใช้คูปอง)
 import { S, t, thaiDate } from '../strings.js';
-import { esc, iconTile, act } from '../ui.js';
+import { esc, iconTile, act, ownerSwitch, ownerName } from '../ui.js';
 import { svgIcon, UI_ICONS, ACTIVITY_ICONS } from '../icons.js';
 import { RULES } from '../config.js';
 import * as api from '../api.js';
@@ -100,10 +100,38 @@ function routineRow(a, today) {
   </div>`;
 }
 
+// ---------- ป้ายแต้มที่ปรายฟ้าให้วันนี้ (เตย/น้องตาล) ----------
+function givenNotes(today) {
+  if (store.isAdmin()) return '';
+  const admin = store.memberOf('admin');
+  const given = store.state.data.entries
+    .filter(e => e.kind === 'earn' && e.status === 'confirmed' && e.created_by === admin?.id && e.entry_date === today)
+    .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  if (!given.length) return '';
+  return `<div class="given-list">${given.map(e => `<div class="given-note">
+    <span class="given-ico">${svgIcon(ACTIVITY_ICONS.gift, { size: 16, stroke: 'var(--pink-deep)', width: 1.8 })}</span>
+    <span class="given-text">${esc(t('givenNote', { n: e.points, name: admin.nickname }))} <b>${esc(e.activity_name)}</b></span>
+  </div>`).join('')}</div>`;
+}
+
+// ---------- การ์ดเล็กแต้มของอีกคน (เตย ↔ น้องตาล) ----------
+function otherCard() {
+  const r = store.me()?.role;
+  if (r !== 'partner' && r !== 'kid') return '';
+  const other = r === 'partner' ? 'kid' : 'partner';
+  if (!store.memberOf(other)) return '';
+  const n = store.state.summary?.[other] ?? 0;
+  return `<div class="other-card">
+    <span class="other-name">${esc(ownerName(other))}</span>
+    <span class="other-pts">${esc(t('otherPoints', { n: n < 0 ? '−' + Math.abs(n) : n }))}</span>
+  </div>`;
+}
+
 // ---------- รอยืนยัน ----------
 function pendingSection() {
-  const { entries, coupons } = store.state.data;
   const admin = store.isAdmin();
+  // ปรายฟ้าเห็นรายการรอยืนยันของทุกคนเสมอ ไม่ขึ้นกับปุ่มสลับ
+  const { entries, coupons } = admin ? store.state.all : store.state.data;
   const pend = entries
     .filter(e => e.kind === 'earn' && e.status === 'pending' && (admin || e.created_by === store.me().memberId))
     .sort((a, b) => a.created_at.localeCompare(b.created_at));
@@ -121,10 +149,9 @@ function pendingSection() {
       : `<span class="status-pill">${esc(S.pending)}</span>`}
   </div>`).join('');
 
-  const partner = store.state.data.members.find(m => m.role === 'partner');
   const tickets = requests.map(c => `<div class="req-ticket">
     <div class="ticket-main req-main">
-      <div class="req-who">${esc(t('couponRequest', { name: partner?.nickname ?? S.rolePartnerName }))}</div>
+      <div class="req-who">${esc(t('couponRequest', { name: ownerName(c.owner ?? 'partner') }))}</div>
       <div class="req-name">${esc(c.reward_name)}</div>
       <div class="req-actions">
         <button type="button" class="chip-btn dark" data-used="${c.id}" ${store.canWrite() ? '' : 'disabled'}>${esc(S.couponGiven)}</button>
@@ -163,7 +190,10 @@ function draw() {
       <div class="greet">${esc(t('greeting', { name: me?.nickname ?? '' }))}</div>
     </header>
     ${pendingSection()}
+    ${ownerSwitch()}
     ${balanceCard()}
+    ${givenNotes(today)}
+    ${otherCard()}
     <div class="sec-head"><h2 class="sec-title inline">${esc(S.routinesTitle)}</h2>
       ${admin ? `<a class="btn-pill sm" href="#/manage-activities/new">${svgIcon(UI_ICONS.plus, { size: 16, stroke: 'currentColor', width: 2 })}${esc(S.todayEmptyAdminButton)}</a>` : ''}</div>
     ${routines}

@@ -1,6 +1,6 @@
 // จัดการรางวัล (เฉพาะผู้ดูแล): ตั๋วรางวัลเรียงแต้มมากไปน้อย · แผ่นล่างเพิ่ม/แก้/ซ่อน/ลบ
 import { S, t } from '../strings.js';
-import { esc, subHead, hiddenBadge, chevron, emptyCard, openSheet, confirmSheet, noticeSheet, field, switchRow } from '../ui.js';
+import { esc, subHead, hiddenBadge, chevron, emptyCard, openSheet, confirmSheet, noticeSheet, field, switchRow, ownerSwitch } from '../ui.js';
 import { svgIcon, UI_ICONS } from '../icons.js';
 import * as api from '../api.js';
 import * as store from '../store.js';
@@ -37,6 +37,7 @@ function draw() {
   const rewards = [...store.state.data.rewards].sort((a, b) => b.cost - a.cost);
   root.innerHTML = `<section class="screen no-nav has-fab">
     ${subHead(S.manageRewards, '#/settings')}
+    ${ownerSwitch()}
     ${rewards.length
       ? `<div class="ticket-list">${rewards.map(ticket).join('')}</div>`
       : emptyCard(UI_ICONS.rewards, S.rewardsEmpty)}
@@ -76,7 +77,7 @@ function openForm(rw) {
     const btn = form.querySelector('[type=submit]');
     btn.disabled = true; errBox.innerHTML = '';
     try {
-      await api.upsertReward({ id: rw?.id ?? null, name, cost, is_active: !form.elements.hidden.checked });
+      await api.upsertReward({ id: rw?.id ?? null, name, cost, is_active: !form.elements.hidden.checked, owner: rw?.owner ?? store.owner() });
       close();
       store.refresh('rewards');
     } catch (err) {

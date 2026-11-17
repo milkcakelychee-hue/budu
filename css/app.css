@@ -621,3 +621,13 @@ button.hrow { cursor: pointer; }
   .code-input:focus, .text-input:focus { border-color: var(--text); }
   .toast { background: #F5EEF3; color: #151119; }
 }
+
+/* น้องตาล (17 พ.ย. 2569): ปุ่มสลับคน · ป้ายแต้มที่ปรายฟ้าให้ · การ์ดแต้มของอีกคน */
+.owner-seg { margin: 0 0 16px; }
+.given-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.given-note { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: var(--card); font-size: 14px; color: var(--text-2); }
+.given-note b { color: var(--text); font-weight: 600; }
+.given-ico { width: 28px; height: 28px; border-radius: 50%; background: rgba(217,86,127,.14); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.other-card { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding: 12px 16px; border-radius: 16px; background: var(--card); font-size: 14px; }
+.other-name { color: var(--text-2); }
+.other-pts { font-weight: 600; color: var(--text); }

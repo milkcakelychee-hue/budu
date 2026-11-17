@@ -31,7 +31,7 @@ export function render(el) {
         <span class="avatar">${svgIcon(ICON_USER, { size: 26 })}</span>
         <div class="pc-text"><div class="cp-k">${esc(S.profile)}</div>
           <div class="pc-name">${esc(me.nickname)}</div>
-          <span class="role-badge">${esc(admin ? S.roleAdminBadge : S.rolePartnerBadge)}</span></div>
+          <span class="role-badge">${esc(admin ? S.roleAdminBadge : store.me()?.role === 'kid' ? S.roleKidBadge : S.rolePartnerBadge)}</span></div>
       </div>
       <div class="code-row">
         <div><div class="cp-k">${esc(S.pairCode)}</div><div class="cr-code">${esc(pairCode || '····-····')}</div></div>

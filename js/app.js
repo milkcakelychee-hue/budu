@@ -37,6 +37,11 @@ const TABS = [
 ];
 
 const appEl = document.getElementById('app');
+// ปุ่มสลับคน (ปรายฟ้า) ใช้ได้ทุกหน้า
+appEl.addEventListener('click', e => {
+  const b = e.target.closest('[data-owner]');
+  if (b) store.setViewOwner(b.dataset.owner);
+});
 const navEl = document.getElementById('tabbar');
 const offlineEl = document.getElementById('offline');
 

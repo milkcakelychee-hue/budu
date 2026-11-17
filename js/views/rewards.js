@@ -1,6 +1,6 @@
 // รางวัล: สลับ รางวัล / คูปอง · แฟนแลกรางวัล (ยืนยัน → ตัดแต้ม → เอฟเฟกต์พิมพ์ตั๋ว) · ผู้ดูแลดูอย่างเดียว
 import { S, t, thaiDate } from '../strings.js';
-import { esc, openSheet, noticeSheet, toast, fmtDate } from '../ui.js';
+import { esc, openSheet, noticeSheet, toast, fmtDate, ownerSwitch } from '../ui.js';
 import { svgIcon, ACTIVITY_ICONS, UI_ICONS } from '../icons.js';
 import { RULES } from '../config.js';
 import * as api from '../api.js';
@@ -88,6 +88,7 @@ function draw() {
       <div class="title-row"><h1 class="page-title">${esc(S.rewardsTitle)}</h1>
         <span class="bal-pill${bal < 0 ? ' neg' : ''}">${svgIcon(ACTIVITY_ICONS.star, { size: 16, width: 1.8 })}${bal < 0 ? '−' + Math.abs(bal) : bal}</span></div>
     </header>
+    ${ownerSwitch()}
     <div class="seg big-seg">
       <button type="button" data-tab="rewards" class="${tab === 'rewards' ? 'on' : ''}">${esc(S.rewardsTitle)}</button>
       <button type="button" data-tab="coupons" class="${tab === 'coupons' ? 'on' : ''}">${esc(S.couponsTab)}</button>

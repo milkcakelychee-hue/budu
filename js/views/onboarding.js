@@ -71,6 +71,7 @@ function viewRole() {
     <div class="role-list">
       ${roleCard('admin', S.roleAdminName, S.roleAdminDesc, ACTIVITY_ICONS.star)}
       ${roleCard('partner', S.rolePartnerName, S.rolePartnerDesc, ACTIVITY_ICONS.heart)}
+      ${roleCard('kid', S.roleKidName, S.roleKidDesc, ACTIVITY_ICONS.gift)}
     </div>
     ${errorLine()}
     <div class="ob-actions"><button type="button" class="btn btn-primary" data-act="next" ${ui.busy || !store.state.online ? 'disabled' : ''}>${esc(S.next)}</button></div>`;
@@ -155,7 +156,7 @@ async function submitCode() {
   if (code.length !== 8) { ui.error = S.joinWrong; draw(); return; }
   await run(async () => {
     const r = await withFreshAuth(() =>
-      ui.mode === 'rejoin' ? api.rejoin(code, ui.role) : api.joinCouple(code));
+      ui.mode === 'rejoin' ? api.rejoin(code, ui.role) : api.joinCouple(code, ui.role));
     store.setSession(r);
     await store.start();
     location.hash = '#/today';

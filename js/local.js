@@ -12,6 +12,8 @@ export const local = {
   getSession: () => read('session'),
   setSession: s => write('session', s),
   getCache: () => read('cache'),
+  getViewOwner: () => read('viewOwner'),
+  setViewOwner: o => write('viewOwner', o),
   setCache: c => write('cache', { ...c, savedAt: new Date().toISOString() }),
   clearAll() {
     try {
