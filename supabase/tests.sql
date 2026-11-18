@@ -326,6 +326,14 @@ select budu_test.act('f');
 select budu_test.expect_ok('น้องตาลแลกรางวัลด้วยแต้มตัวเอง', format('select public.budu_redeem_reward(%L)', current_setting('t.krew')));
 select budu_test.check('คูปองเป็นของน้องตาล', exists (select 1 from public.budu_coupons where reward_id = current_setting('t.krew')::uuid and owner = 'kid'));
 select budu_test.check('แต้มน้องตาลเหลือ 2', (public.budu_points_summary() ->> 'kid')::int = 2, public.budu_points_summary()::text);
+select budu_test.act('b');
+-- ทุกแถวในเทสต์สร้างในธุรกรรมเดียว เวลา created_at เท่ากัน จึงตรวจแค่ว่ามีครบ ไม่ตรวจลำดับ
+select budu_test.check('เตยดูเรื่องล่าสุดของน้องตาลได้ (มีได้แต้มและแลกรางวัล)',
+  exists (select 1 from json_array_elements(public.budu_owner_recent('kid')) j where j ->> 'kind' = 'redeem')
+  and exists (select 1 from json_array_elements(public.budu_owner_recent('kid')) j where j ->> 'kind' = 'earn'),
+  public.budu_owner_recent('kid')::text);
+select budu_test.expect_error('ขอเรื่องล่าสุดของคนที่ไม่มีไม่ได้', 'select public.budu_owner_recent(''admin'')', 'forbidden');
+select budu_test.check('มียอดโดนหักในสรุปแต้ม', public.budu_points_summary()::jsonb ? 'kid_deducted', public.budu_points_summary()::text);
 
 -- ลบกิจกรรม: แต้มเดิมคงอยู่
 set role authenticated;

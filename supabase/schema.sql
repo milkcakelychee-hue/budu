@@ -474,7 +474,23 @@ begin
   m := public.budu_require();
   return json_build_object(
     'partner', (select coalesce(sum(points), 0) from public.budu_entries where couple_id = m.couple_id and status = 'confirmed' and owner = 'partner'),
-    'kid',     (select coalesce(sum(points), 0) from public.budu_entries where couple_id = m.couple_id and status = 'confirmed' and owner = 'kid'));
+    'kid',     (select coalesce(sum(points), 0) from public.budu_entries where couple_id = m.couple_id and status = 'confirmed' and owner = 'kid'),
+    -- แต้มที่โดนหักรวม (ค่าบวก) ของแต่ละคน · ป้ายแต้มอีกคนในหน้าวันนี้ (18 พ.ย. 2569)
+    'partner_deducted', (select coalesce(-sum(points), 0) from public.budu_entries where couple_id = m.couple_id and status = 'confirmed' and kind = 'deduct' and owner = 'partner'),
+    'kid_deducted',     (select coalesce(-sum(points), 0) from public.budu_entries where couple_id = m.couple_id and status = 'confirmed' and kind = 'deduct' and owner = 'kid'));
+end $$;
+
+-- เรื่องล่าสุดของคนหนึ่ง (ได้แต้ม โดนหัก แลกรางวัล) · เตย/น้องตาลดูของกันและกันได้ (18 พ.ย. 2569)
+create or replace function public.budu_owner_recent(p_owner text) returns json
+language plpgsql stable security definer set search_path = public as $$
+declare m public.budu_members;
+begin
+  m := public.budu_require();
+  if p_owner not in ('partner','kid') then raise exception 'forbidden'; end if;
+  return (select coalesce(json_agg(x order by x.created_at desc), '[]') from (
+    select kind, activity_name, points, entry_date, created_at from public.budu_entries
+    where couple_id = m.couple_id and owner = p_owner and status = 'confirmed'
+    order by created_at desc limit 15) x);
 end $$;
 
 create or replace function public.budu_export_all() returns json
@@ -535,7 +551,7 @@ revoke execute on function
   public.budu_redeem_reward(uuid), public.budu_request_coupon_use(uuid), public.budu_mark_coupon_used(uuid),
   public.budu_decline_coupon_request(uuid),
   public.budu_upsert_activity(uuid, text, text, int, int, text, boolean, boolean, boolean, text),
-  public.budu_upsert_reward(uuid, text, int, boolean, text), public.budu_points_summary(), public.budu_delete_reward(uuid), public.budu_delete_activity(uuid), public.budu_export_all()
+  public.budu_upsert_reward(uuid, text, int, boolean, text), public.budu_points_summary(), public.budu_owner_recent(text), public.budu_delete_reward(uuid), public.budu_delete_activity(uuid), public.budu_export_all()
 from public, anon, authenticated;
 
 -- ใช้ใน RLS จึงต้องให้ authenticated เรียกได้
@@ -547,7 +563,7 @@ grant execute on function
   public.budu_redeem_reward(uuid), public.budu_request_coupon_use(uuid), public.budu_mark_coupon_used(uuid),
   public.budu_decline_coupon_request(uuid),
   public.budu_upsert_activity(uuid, text, text, int, int, text, boolean, boolean, boolean, text),
-  public.budu_upsert_reward(uuid, text, int, boolean, text), public.budu_points_summary(), public.budu_delete_reward(uuid), public.budu_delete_activity(uuid), public.budu_export_all()
+  public.budu_upsert_reward(uuid, text, int, boolean, text), public.budu_points_summary(), public.budu_owner_recent(text), public.budu_delete_reward(uuid), public.budu_delete_activity(uuid), public.budu_export_all()
 to authenticated;
 
 -- ---------------------------------------------------------------------

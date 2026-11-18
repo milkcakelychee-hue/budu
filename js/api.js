@@ -94,6 +94,7 @@ export const deleteReward = id => rpc('delete_reward', { p_id: id });
 export const deleteActivity = id => rpc('delete_activity', { p_id: id });
 export const exportAll = () => rpc('export_all');
 export const pointsSummary = () => rpc('points_summary');
+export const ownerRecent = owner => rpc('owner_recent', { p_owner: owner });
 
 // ---------- realtime ----------
 // เมื่อมีการเปลี่ยนแปลง เรียก onChange(ชื่อตารางแบบไม่มี prefix) ให้ store โหลดตารางนั้นซ้ำ

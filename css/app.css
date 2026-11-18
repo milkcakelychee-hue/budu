@@ -636,9 +636,20 @@ button.hrow { cursor: pointer; }
 .given-note { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: var(--card); font-size: 14px; color: var(--text-2); }
 .given-note b { color: var(--text); font-weight: 600; }
 .given-ico { width: 28px; height: 28px; border-radius: 50%; background: rgba(217,86,127,.14); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.other-card { display: flex; align-items: center; justify-content: space-between; margin: 12px 20px 0; padding: 12px 16px; border-radius: 16px; background: var(--card); font-size: 14px; }
-.other-name { color: var(--text-2); }
-.other-pts { font-weight: 600; color: var(--text); }
+/* ป้ายแต้มอีกคน: ชมพู gradient แตะดูเรื่องล่าสุด (18 พ.ย. 2569) */
+.other-card { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; width: calc(100% - 40px); margin: 12px 20px 0; padding: 14px 16px; border: 0; border-radius: 18px; text-align: left; font: inherit; font-size: 15px; color: #fff; cursor: pointer;
+  background: linear-gradient(135deg, #F28BB0 0%, #D9567F 100%); box-shadow: 0 6px 18px rgba(217,86,127,.25); }
+.other-card b { font-weight: 700; }
+.oc-tap { font-size: 12px; opacity: .85; }
+.recent-list { display: flex; flex-direction: column; margin: 4px 0 16px; max-height: 55vh; overflow-y: auto; }
+.recent-row { display: flex; align-items: center; gap: 12px; padding: 12px 2px; border-bottom: 1px solid var(--card-foot); }
+.recent-row:last-child { border-bottom: 0; }
+.recent-main { flex: 1; min-width: 0; }
+.recent-name { font-size: 15px; color: var(--text); }
+.recent-meta { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+.recent-pts { font-weight: 700; color: var(--text-2); }
+.recent-pts.up { color: var(--pink-deep); }
+.recent-empty { padding: 16px 0; text-align: center; color: var(--text-2); font-size: 14px; }
 .owner-checks { display: flex; gap: 10px; }
 .owner-checks button { flex: 1; height: 44px; border-radius: 999px; border: 1.5px solid var(--card-foot); background: transparent; color: var(--text-2); font-size: 15px; cursor: pointer; }
 .owner-checks button.on { border-color: var(--pink); background: rgba(217,86,127,.1); color: var(--text); font-weight: 600; }

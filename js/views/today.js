@@ -1,6 +1,6 @@
 // วันนี้: แต้มสะสม + รางวัลเป้าหมาย · กิจวัตรวันนี้ · รอยืนยัน (+ คำขอใช้คูปอง)
 import { S, t, thaiDate } from '../strings.js';
-import { esc, iconTile, act, ownerSwitch, ownerName } from '../ui.js';
+import { esc, iconTile, act, ownerSwitch, ownerName, openSheet } from '../ui.js';
 import { svgIcon, UI_ICONS, ACTIVITY_ICONS } from '../icons.js';
 import { RULES } from '../config.js';
 import * as api from '../api.js';
@@ -101,16 +101,19 @@ function routineRow(a, today) {
 }
 
 // ---------- ป้ายแต้มที่ปรายฟ้าให้วันนี้ (เตย/น้องตาล) ----------
+// ปรายฟ้าเห็นว่าวันนี้ให้แต้มอะไรใครไปแล้วบ้าง (ทุกคน ไม่ขึ้นกับปุ่มสลับ)
 function givenNotes(today) {
-  if (store.isAdmin()) return '';
+  const isAdmin = store.isAdmin();
   const admin = store.memberOf('admin');
-  const given = store.state.data.entries
+  const given = (isAdmin ? store.state.all : store.state.data).entries
     .filter(e => e.kind === 'earn' && e.status === 'confirmed' && e.created_by === admin?.id && e.entry_date === today)
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
   if (!given.length) return '';
   return `<div class="given-list">${given.map(e => `<div class="given-note">
     <span class="given-ico">${svgIcon(ACTIVITY_ICONS.gift, { size: 16, stroke: 'var(--pink-deep)', width: 1.8 })}</span>
-    <span class="given-text">${esc(t('givenNote', { n: e.points, name: admin.nickname }))} <b>${esc(e.activity_name)}</b></span>
+    <span class="given-text">${esc(isAdmin
+      ? t('givenNoteAdmin', { n: e.points, name: ownerName(e.owner ?? 'partner') })
+      : t('givenNote', { n: e.points, name: admin.nickname }))} <b>${esc(e.activity_name)}</b></span>
   </div>`).join('')}</div>`;
 }
 
@@ -121,10 +124,32 @@ function otherCard() {
   const other = r === 'partner' ? 'kid' : 'partner';
   if (!store.memberOf(other)) return '';
   const n = store.state.summary?.[other] ?? 0;
-  return `<div class="other-card">
-    <span class="other-name">${esc(ownerName(other))}</span>
-    <span class="other-pts">${esc(t('otherPoints', { n: n < 0 ? '−' + Math.abs(n) : n }))}</span>
-  </div>`;
+  const d = store.state.summary?.[`${other}_deducted`] ?? 0;
+  return `<button type="button" class="other-card" data-other="${other}">
+    <span class="oc-text">${esc(S.otherNow)} <b>${esc(ownerName(other))}</b> ${esc(t('otherEarned', { n: n < 0 ? '−' + Math.abs(n) : n }))} ${esc(t('otherDeducted', { n: d }))}</span>
+    <span class="oc-tap">${esc(S.otherTap)}</span>
+  </button>`;
+}
+
+// แผ่นล่าง: เรื่องล่าสุดของอีกคน (ได้แต้ม โดนหัก แลกรางวัล)
+async function openRecent(owner) {
+  const { el, close } = openSheet(`<h2 class="sheet-title">${esc(t('otherRecentTitle', { name: ownerName(owner) }))}</h2>
+    <div class="recent-list"><div class="recent-empty">…</div></div>
+    <button type="button" class="btn btn-secondary" data-close>${esc(S.close)}</button>`);
+  el.querySelector('[data-close]').onclick = close;
+  const box = el.querySelector('.recent-list');
+  try {
+    const list = await api.ownerRecent(owner);
+    box.innerHTML = list.length ? list.map(r => `<div class="recent-row">
+      <div class="recent-main">
+        <div class="recent-name">${esc(r.activity_name)}</div>
+        <div class="recent-meta">${esc(S[`recentKind_${r.kind}`] ?? '')} · ${esc(thaiDate(new Date(`${r.entry_date}T12:00:00+07:00`)))}</div>
+      </div>
+      <span class="recent-pts${r.points > 0 ? ' up' : ''}">${r.points > 0 ? '+' + r.points : '−' + Math.abs(r.points)}</span>
+    </div>`).join('') : `<div class="recent-empty">${esc(S.otherRecentEmpty)}</div>`;
+  } catch (err) {
+    box.innerHTML = `<div class="err-line">${esc(err.message || S.genericError)}</div>`;
+  }
 }
 
 // ---------- รอยืนยัน ----------
@@ -199,6 +224,7 @@ function draw() {
     ${routines}
   </section>`;
 
+  root.querySelector('[data-other]')?.addEventListener('click', e => openRecent(e.currentTarget.dataset.other));
   root.querySelectorAll('[data-earn]').forEach(b => b.onclick = () => {
     const a = acts.find(x => x.id === b.dataset.earn);
     act(b, async () => { await api.logEarn(a.id); await store.refresh('entries'); },
