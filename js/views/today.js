@@ -101,21 +101,21 @@ function routineRow(a, today) {
 }
 
 // ---------- ป้ายแต้มที่ปรายฟ้าให้วันนี้ (เตย/น้องตาล) ----------
-// ปรายฟ้าเห็นว่าวันนี้ให้แต้มอะไรใครไปแล้วบ้าง (ทุกคน ไม่ขึ้นกับปุ่มสลับ)
+// ปรายฟ้าไม่มีป้ายนี้ · มีปุ่มไปหน้าประวัติแทน (ผู้ใช้กำหนด 19 พ.ย. 2569)
 function givenNotes(today) {
-  const isAdmin = store.isAdmin();
+  if (store.isAdmin()) return historyButton();
   const admin = store.memberOf('admin');
-  const given = (isAdmin ? store.state.all : store.state.data).entries
+  const given = store.state.data.entries
     .filter(e => e.kind === 'earn' && e.status === 'confirmed' && e.created_by === admin?.id && e.entry_date === today)
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
   if (!given.length) return '';
   return `<div class="given-list">${given.map(e => `<div class="given-note">
     <span class="given-ico">${svgIcon(ACTIVITY_ICONS.gift, { size: 16, stroke: 'var(--pink-deep)', width: 1.8 })}</span>
-    <span class="given-text">${esc(isAdmin
-      ? t('givenNoteAdmin', { n: e.points, name: ownerName(e.owner ?? 'partner') })
-      : t('givenNote', { n: e.points, name: admin.nickname }))} <b>${esc(e.activity_name)}</b></span>
+    <span class="given-text">${esc(t('givenNote', { n: e.points, name: admin.nickname }))} <b>${esc(e.activity_name)}</b></span>
   </div>`).join('')}</div>`;
 }
+
+const historyButton = () => `<a class="history-link" href="#/history">${svgIcon(UI_ICONS.list, { size: 18, stroke: 'currentColor', width: 1.8 })}${esc(S.viewHistory)}${svgIcon(UI_ICONS.chevron, { size: 16, stroke: 'currentColor', width: 2 })}</a>`;
 
 // ---------- การ์ดเล็กแต้มของอีกคน (เตย ↔ น้องตาล) ----------
 function otherCard() {
